@@ -349,7 +349,7 @@ export default function Login() {
                                     textDecoration: 'none',
                                     transition: 'all 0.2s',
                                     '&:hover': {
-                                        color: '#00FF66',
+                                        color: '#00ff33',
                                         textDecoration: 'underline',
                                     },
                                 }}
