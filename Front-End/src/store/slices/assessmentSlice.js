@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
+import { MOCK_ASSESSMENT_HISTORY } from '../../utils/mockUser';
 
 // Отправка диагностики
 export const submitAssessment = createAsyncThunk(
@@ -18,14 +19,25 @@ export const submitAssessment = createAsyncThunk(
                 timestamp: new Date().toISOString(),
             };
 
-            // Если пользователь авторизован, добавляем user_id
+            // ===== MOCK ПОЛЬЗОВАТЕЛЬ =====
+            if (user?.email === 'user@example.com') {
+                // Имитируем задержку
+                await new Promise((resolve) => setTimeout(resolve, 500));
+
+                const results = calculateResults(answers);
+                return {
+                    ...results,
+                    timestamp: payload.timestamp,
+                };
+            }
+
+            // ===== РЕАЛЬНЫЕ ПОЛЬЗОВАТЕЛИ =====
             if (user?.id) {
                 payload.user_id = user.id;
-                // Отправляем на backend
                 const data = await api.post('/assessment/submit', payload);
                 return data;
             } else {
-                // Если не авторизован, рассчитываем результаты локально
+                // Не авторизован - локальные результаты
                 const results = calculateResults(answers);
                 return {
                     local: true,
@@ -42,8 +54,17 @@ export const submitAssessment = createAsyncThunk(
 // Получение истории диагностик
 export const fetchAssessmentHistory = createAsyncThunk(
     'assessment/fetchHistory',
-    async (_, { rejectWithValue }) => {
+    async (_, { getState, rejectWithValue }) => {
         try {
+            const { user } = getState().user;
+
+            // ===== MOCK ИСТОРИЯ ДЛЯ ТЕСТОВОГО ПОЛЬЗОВАТЕЛЯ =====
+            if (user?.email === 'user@example.com') {
+                await new Promise((resolve) => setTimeout(resolve, 300));
+                return MOCK_ASSESSMENT_HISTORY;
+            }
+
+            // ===== РЕАЛЬНАЯ ЗАГРУЗКА =====
             const data = await api.get('/assessment/history');
             return data.assessments || [];
         } catch (error) {
@@ -55,8 +76,17 @@ export const fetchAssessmentHistory = createAsyncThunk(
 // Загрузка последней диагностики с backend
 export const fetchLatestAssessment = createAsyncThunk(
     'assessment/fetchLatest',
-    async (_, { rejectWithValue }) => {
+    async (_, { getState, rejectWithValue }) => {
         try {
+            const { user } = getState().user;
+
+            // ===== MOCK ДАННЫЕ =====
+            if (user?.email === 'user@example.com') {
+                await new Promise((resolve) => setTimeout(resolve, 300));
+                return MOCK_ASSESSMENT_HISTORY[0]; // Последняя диагностика
+            }
+
+            // ===== РЕАЛЬНАЯ ЗАГРУЗКА =====
             const data = await api.get('/assessment/latest');
             return data;
         } catch (error) {
@@ -188,6 +218,17 @@ const assessmentSlice = createSlice({
             })
             .addCase(fetchAssessmentHistory.fulfilled, (state, action) => {
                 state.history = action.payload;
+
+                // Автоматически устанавливаем последнюю диагностику как текущую
+                if (action.payload.length > 0) {
+                    const latest = action.payload[0];
+                    state.burnoutLevel = latest.burnoutLevel;
+                    state.score = latest.score;
+                    state.emotionalExhaustion = latest.emotionalExhaustion;
+                    state.depersonalization = latest.depersonalization;
+                    state.reducedAccomplishment = latest.reducedAccomplishment;
+                }
+
                 state.loading = false;
             })
             .addCase(fetchAssessmentHistory.rejected, (state, action) => {
@@ -200,6 +241,9 @@ const assessmentSlice = createSlice({
                 state.results = action.payload;
                 state.burnoutLevel = action.payload.burnoutLevel;
                 state.score = action.payload.score;
+                state.emotionalExhaustion = action.payload.emotionalExhaustion;
+                state.depersonalization = action.payload.depersonalization;
+                state.reducedAccomplishment = action.payload.reducedAccomplishment;
                 state.synced = true;
             });
     },

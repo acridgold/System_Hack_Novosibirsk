@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
+import { MOCK_RECOMMENDATIONS } from '../../utils/mockUser';
 
 // Получение рекомендаций
 export const fetchRecommendations = createAsyncThunk(
@@ -8,18 +9,18 @@ export const fetchRecommendations = createAsyncThunk(
         try {
             const { user } = getState().user;
 
-            // Если авторизован, получаем персональные рекомендации
+            // ===== MOCK РЕКОМЕНДАЦИИ ДЛЯ ТЕСТОВОГО ПОЛЬЗОВАТЕЛЯ =====
+            if (user?.email === 'user@example.com') {
+                return MOCK_RECOMMENDATIONS;
+            }
+
+            // ===== РЕАЛЬНАЯ ЗАГРУЗКА =====
             if (user?.id) {
                 const data = await api.get('/recommendations');
                 return data.tips || [];
             }
 
-            // Если не авторизован, получаем общие рекомендации
-            const response = await fetch(
-                `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/recommendations/public`
-            );
-            const data = await response.json();
-            return data.tips || [];
+            return [];
         } catch (error) {
             return rejectWithValue(error.message);
         }

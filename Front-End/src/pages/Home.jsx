@@ -4,163 +4,317 @@ import {
     Container,
     Typography,
     Button,
+    Box,
+    Grid,
     Card,
     CardContent,
-    Grid,
-    Box,
-    Stack,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import RecommendIcon from '@mui/icons-material/Lightbulb';
-import PsychologyIcon from '@mui/icons-material/Psychology';
+import {
+    Psychology,
+    TrendingDown,
+    FlashOn,
+    CheckCircle,
+    ArrowForward,
+} from '@mui/icons-material';
 
-const MotionCard = motion.create(Card);
-const MotionBox = motion.create(Box);
+const MotionBox = motion(Box);
+const MotionCard = motion(Card);
 
-const Home = () => {
+const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5 },
+};
+
+export default function Home() {
     const navigate = useNavigate();
 
     const features = [
         {
-            icon: <AssessmentIcon sx={{ fontSize: 50 }} />,
-            title: 'Диагностика выгорания',
-            description: 'Пройдите научно обоснованный опрос для оценки уровня профессионального выгорания',
-            action: () => navigate('/assessment'),
-            buttonText: 'Начать тест',
-            color: '#FF6B00',
+            icon: <Psychology sx={{ fontSize: 40 }} />,
+            title: 'Умная диагностика',
+            description: 'AI-анализ вашего состояния на основе научных методик',
+            color: '#00AA44',
+            bgGradient: 'linear-gradient(135deg, rgba(0, 170, 68, 0.1) 0%, rgba(51, 204, 119, 0.05) 100%)',
         },
         {
-            icon: <DashboardIcon sx={{ fontSize: 50 }} />,
-            title: 'Дашборд метрик',
-            description: 'Отслеживайте динамику вашего состояния и прогресс в реальном времени',
-            action: () => navigate('/dashboard'),
-            buttonText: 'Открыть дашборд',
-            color: '#2196f3',
+            icon: <TrendingDown sx={{ fontSize: 40 }} />,
+            title: 'Отслеживание прогресса',
+            description: 'Видьте динамику изменения показателей в реальном времени',
+            color: '#1DB954',
+            bgGradient: 'linear-gradient(135deg, rgba(29, 185, 84, 0.1) 0%, rgba(110, 231, 183, 0.05) 100%)',
         },
         {
-            icon: <RecommendIcon sx={{ fontSize: 50 }} />,
+            icon: <FlashOn sx={{ fontSize: 40 }} />,
             title: 'Персональные советы',
-            description: 'Получите рекомендации по управлению стрессом на основе AI-анализа',
-            action: () => navigate('/recommendations'),
-            buttonText: 'Посмотреть советы',
-            color: '#4caf50',
+            description: 'Рекомендации, адаптированные под ваш профиль',
+            color: '#047857',
+            bgGradient: 'linear-gradient(135deg, rgba(4, 120, 87, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
         },
     ];
 
     return (
-        <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Box sx={{ minHeight: '100vh', background: '#F0F9F5' }}>
             {/* Hero Section */}
-            <MotionBox
-                initial={{ opacity: 0, y: -30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                sx={{ textAlign: 'center', mb: 8 }}
-            >
-                <Box display="flex" justifyContent="center" alignItems="center" mb={3}>
-                    <PsychologyIcon color="primary" sx={{ fontSize: 80, mr: 2 }} />
-                    <Typography variant="h1" color="primary">
-                        SDEK Burnout AI
-                    </Typography>
-                </Box>
-
-                <Typography variant="h5" color="text.secondary" paragraph sx={{ maxWidth: 800, mx: 'auto' }}>
-                    AI-инструмент для оценки профессионального выгорания сотрудников и партнёров.
-                    Вовремя распознайте признаки выгорания и получите персональные рекомендации.
-                </Typography>
-
-                <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4 }}>
-                    <Button
-                        variant="contained"
-                        size="large"
-                        onClick={() => navigate('/assessment')}
-                        component={motion.button}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        Пройти диагностику
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        size="large"
-                        onClick={() => navigate('/dashboard')}
-                        component={motion.button}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        Открыть дашборд
-                    </Button>
-                </Stack>
-            </MotionBox>
-
-            {/* Features Grid */}
-            <Grid container spacing={4}>
-                {features.map((feature, index) => (
-                    <Grid item xs={12} md={4} key={index}>
-                        <MotionCard
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: index * 0.2 }}
-                            whileHover={{ scale: 1.03, y: -5 }}
-                            sx={{
-                                height: '100%',
-                                cursor: 'pointer',
-                                borderTop: `4px solid ${feature.color}`,
-                            }}
-                            onClick={feature.action}
-                        >
-                            <CardContent sx={{ p: 4 }}>
-                                <Box display="flex" justifyContent="center" mb={2}>
-                                    <Box sx={{ color: feature.color }}>{feature.icon}</Box>
-                                </Box>
-                                <Typography variant="h5" align="center" gutterBottom>
-                                    {feature.title}
-                                </Typography>
-                                <Typography variant="body1" color="text.secondary" align="center" paragraph>
-                                    {feature.description}
-                                </Typography>
-                                <Button
-                                    variant="contained"
-                                    fullWidth
-                                    sx={{ backgroundColor: feature.color, '&:hover': { backgroundColor: feature.color, filter: 'brightness(0.9)' } }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        feature.action();
+            <Box sx={{
+                pt: { xs: 8, md: 16 },
+                pb: { xs: 8, md: 12 },
+                background: 'linear-gradient(135deg, #F0F9F5 0%, #E0F2EA 100%)',
+            }}>
+                <Container maxWidth="lg">
+                    <MotionBox {...fadeInUp} sx={{ textAlign: 'center', mb: 6 }}>
+                        <Box sx={{ mb: 3 }}>
+                            <Box
+                                sx={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 1.5,
+                                    mb: 3,
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        p: 1.5,
+                                        background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                                        borderRadius: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
                                     }}
                                 >
-                                    {feature.buttonText}
+                                    <Psychology
+                                        sx={{
+                                            fontSize: 48,
+                                            color: 'white',
+                                        }}
+                                    />
+                                </Box>
+                                <Typography
+                                    variant="h3"
+                                    sx={{
+                                        fontWeight: 700,
+                                        letterSpacing: '-0.02em',
+                                        background: 'linear-gradient(135deg, #00AA44 0%, #1DB954 100%)',
+                                        backgroundClip: 'text',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                    }}
+                                >
+                                    SDEK Burnout AI
+                                </Typography>
+                            </Box>
+
+                            <Typography
+                                variant="h4"
+                                sx={{
+                                    color: '#111827',
+                                    fontWeight: 600,
+                                    mb: 2,
+                                    fontSize: { xs: '1.5rem', md: '2rem' },
+                                    lineHeight: 1.3,
+                                }}
+                            >
+                                Ваше благополучие — наш приоритет
+                            </Typography>
+
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    color: '#4B5563',
+                                    maxWidth: 600,
+                                    mx: 'auto',
+                                    fontSize: '1.125rem',
+                                    lineHeight: 1.6,
+                                }}
+                            >
+                                Определите уровень профессионального выгорания и получите персональный план действий для восстановления баланса
+                            </Typography>
+                        </Box>
+
+                        {/* CTA Buttons */}
+                        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', mt: 4 }}>
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <Button
+                                    variant="contained"
+                                    size="large"
+                                    onClick={() => navigate('/assessment')}
+                                    sx={{
+                                        px: 4,
+                                        py: 1.5,
+                                        fontSize: '1rem',
+                                        borderRadius: 2,
+                                        background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                                        color: 'white',
+                                        boxShadow: '0 8px 24px rgba(0, 170, 68, 0.3)',
+                                        '&:hover': {
+                                            boxShadow: '0 12px 32px rgba(0, 170, 68, 0.4)',
+                                        },
+                                    }}
+                                    endIcon={<ArrowForward />}
+                                >
+                                    Начать диагностику
                                 </Button>
-                            </CardContent>
-                        </MotionCard>
-                    </Grid>
-                ))}
-            </Grid>
+                            </motion.div>
 
-            {/* Statistics Section */}
-            <MotionBox
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                sx={{ mt: 8, p: 4, backgroundColor: 'primary.main', borderRadius: 3, color: 'white' }}
-            >
-                <Grid container spacing={4} textAlign="center">
-                    <Grid item xs={12} md={4}>
-                        <Typography variant="h2" fontWeight="bold">85%</Typography>
-                        <Typography variant="h6">Точность диагностики</Typography>
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <Button
+                                    variant="outlined"
+                                    size="large"
+                                    onClick={() => navigate('/dashboard')}
+                                    sx={{
+                                        px: 4,
+                                        py: 1.5,
+                                        fontSize: '1rem',
+                                        borderRadius: 2,
+                                        borderColor: '#00AA44',
+                                        color: '#00AA44',
+                                        fontWeight: 600,
+                                        '&:hover': {
+                                            backgroundColor: '#F0F9F5',
+                                            borderColor: '#1DB954',
+                                            color: '#1DB954',
+                                        },
+                                    }}
+                                    endIcon={<TrendingDown />}
+                                >
+                                    Просмотр результатов
+                                </Button>
+                            </motion.div>
+                        </Box>
+                    </MotionBox>
+                </Container>
+            </Box>
+
+            {/* Features Section */}
+            <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: '#FFFFFF', borderTop: '1px solid #E0EFE5' }}>
+                <Container maxWidth="lg">
+                    <MotionBox {...fadeInUp} sx={{ textAlign: 'center', mb: 8 }}>
+                        <Typography
+                            variant="h2"
+                            sx={{
+                                color: '#111827',
+                                fontWeight: 700,
+                                mb: 2,
+                                letterSpacing: '-0.01em',
+                            }}
+                        >
+                            Почему выбирают SDEK Burnout AI
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: '#4B5563', maxWidth: 500, mx: 'auto' }}>
+                            Комплексный подход к оценке и управлению профессиональным выгоранием
+                        </Typography>
+                    </MotionBox>
+
+                    <Grid container spacing={3}>
+                        {features.map((feature, idx) => (
+                            <Grid item xs={12} md={4} key={idx}>
+                                <MotionCard
+                                    {...fadeInUp}
+                                    transition={{ ...fadeInUp.transition, delay: idx * 0.1 }}
+                                    component={motion.div}
+                                    whileHover={{ y: -8 }}
+                                    sx={{
+                                        height: '100%',
+                                        borderLeft: `4px solid ${feature.color}`,
+                                        borderTop: 'none',
+                                        borderRight: 'none',
+                                        borderBottom: 'none',
+                                        background: feature.bgGradient,
+                                    }}
+                                >
+                                    <CardContent sx={{ p: 3 }}>
+                                        <Box
+                                            sx={{
+                                                color: feature.color,
+                                                mb: 2,
+                                                display: 'inline-block',
+                                            }}
+                                        >
+                                            {feature.icon}
+                                        </Box>
+                                        <Typography
+                                            variant="h5"
+                                            sx={{
+                                                fontWeight: 600,
+                                                mb: 1,
+                                                color: '#111827',
+                                            }}
+                                        >
+                                            {feature.title}
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                color: '#4B5563',
+                                                lineHeight: 1.6,
+                                            }}
+                                        >
+                                            {feature.description}
+                                        </Typography>
+                                    </CardContent>
+                                </MotionCard>
+                            </Grid>
+                        ))}
                     </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Typography variant="h2" fontWeight="bold">500+</Typography>
-                        <Typography variant="h6">Пользователей</Typography>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Typography variant="h2" fontWeight="bold">4.8/5</Typography>
-                        <Typography variant="h6">Средняя оценка</Typography>
-                    </Grid>
-                </Grid>
-            </MotionBox>
-        </Container>
+                </Container>
+            </Box>
+
+            {/* CTA Section */}
+            <Box sx={{
+                py: { xs: 8, md: 12 },
+                backgroundColor: '#FFFFFF',
+                borderTop: '1px solid #E0EFE5'
+            }}>
+                <Container maxWidth="md">
+                    <MotionBox {...fadeInUp} sx={{ textAlign: 'center' }}>
+                        <Typography
+                            variant="h3"
+                            sx={{
+                                color: '#111827',
+                                fontWeight: 700,
+                                mb: 2,
+                                letterSpacing: '-0.01em',
+                            }}
+                        >
+                            Готовы узнать о себе больше?
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            sx={{
+                                color: '#4B5563',
+                                mb: 4,
+                                fontSize: '1.125rem',
+                            }}
+                        >
+                            Пройдите быструю диагностику и получите персональный анализ
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            size="large"
+                            onClick={() => navigate('/assessment')}
+                            sx={{
+                                px: 5,
+                                py: 1.5,
+                                fontSize: '1rem',
+                                borderRadius: 2,
+                                background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                                color: 'white',
+                                boxShadow: '0 8px 24px rgba(0, 170, 68, 0.3)',
+                            }}
+                            endIcon={<CheckCircle />}
+                        >
+                            Начать диагностику
+                        </Button>
+                    </MotionBox>
+                </Container>
+            </Box>
+        </Box>
     );
-};
-
-export default Home;
+}
