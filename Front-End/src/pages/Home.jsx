@@ -42,15 +42,15 @@ export default function Home() {
             icon: <TrendingDown sx={{ fontSize: 40 }} />,
             title: 'Отслеживание прогресса',
             description: 'Видьте динамику изменения показателей в реальном времени',
-            color: '#1DB954',
-            bgGradient: 'linear-gradient(135deg, rgba(29, 185, 84, 0.1) 0%, rgba(110, 231, 183, 0.05) 100%)',
+            color: '#00DD55',
+            bgGradient: 'linear-gradient(135deg, rgba(0, 221, 85, 0.1) 0%, rgba(51, 255, 136, 0.05) 100%)',
         },
         {
             icon: <FlashOn sx={{ fontSize: 40 }} />,
             title: 'Персональные советы',
             description: 'Рекомендации, адаптированные под ваш профиль',
-            color: '#047857',
-            bgGradient: 'linear-gradient(135deg, rgba(4, 120, 87, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
+            color: '#00FF66',
+            bgGradient: 'linear-gradient(135deg, rgba(0, 255, 102, 0.1) 0%, rgba(51, 255, 136, 0.05) 100%)',
         },
     ];
 
@@ -76,11 +76,14 @@ export default function Home() {
                                 <Box
                                     sx={{
                                         p: 1.5,
-                                        background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                                        background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
+                                        backgroundSize: '200% 200%',
                                         borderRadius: 2,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
+                                        boxShadow: '0 8px 24px rgba(0, 255, 102, 0.3)',
+                                        animation: 'gradientPulse 3s ease infinite',
                                     }}
                                 >
                                     <Psychology
@@ -95,7 +98,7 @@ export default function Home() {
                                     sx={{
                                         fontWeight: 700,
                                         letterSpacing: '-0.02em',
-                                        background: 'linear-gradient(135deg, #00AA44 0%, #1DB954 100%)',
+                                        background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
                                         backgroundClip: 'text',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
@@ -135,7 +138,7 @@ export default function Home() {
                         {/* CTA Buttons */}
                         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', mt: 4 }}>
                             <motion.div
-                                whileHover={{ scale: 1.05 }}
+                                whileHover={{ scale: 1.08 }}
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Button
@@ -143,15 +146,21 @@ export default function Home() {
                                     size="large"
                                     onClick={() => navigate('/assessment')}
                                     sx={{
-                                        px: 4,
-                                        py: 1.5,
-                                        fontSize: '1rem',
-                                        borderRadius: 2,
-                                        background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                                        px: 5,
+                                        py: 2,
+                                        fontSize: '1.1rem',
+                                        borderRadius: 3,
+                                        background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
+                                        backgroundSize: '300% 300%',
                                         color: 'white',
-                                        boxShadow: '0 8px 24px rgba(0, 170, 68, 0.3)',
+                                        fontWeight: 700,
+                                        boxShadow: '0 8px 32px rgba(0, 255, 102, 0.4)',
+                                        textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                        border: '2px solid rgba(255,255,255,0.2)',
                                         '&:hover': {
-                                            boxShadow: '0 12px 32px rgba(0, 170, 68, 0.4)',
+                                            boxShadow: '0 16px 48px rgba(0, 255, 102, 0.6), 0 0 40px rgba(0, 255, 102, 0.3)',
+                                            animation: 'gradientRotate 3s ease infinite',
+                                            border: '2px solid rgba(255,255,255,0.4)',
                                         },
                                     }}
                                     endIcon={<ArrowForward />}
@@ -161,7 +170,7 @@ export default function Home() {
                             </motion.div>
 
                             <motion.div
-                                whileHover={{ scale: 1.05 }}
+                                whileHover={{ scale: 1.08 }}
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Button
@@ -169,17 +178,22 @@ export default function Home() {
                                     size="large"
                                     onClick={() => navigate('/dashboard')}
                                     sx={{
-                                        px: 4,
-                                        py: 1.5,
-                                        fontSize: '1rem',
-                                        borderRadius: 2,
+                                        px: 5,
+                                        py: 2,
+                                        fontSize: '1.1rem',
+                                        borderRadius: 3,
+                                        borderWidth: '2px',
                                         borderColor: '#00AA44',
+                                        background: 'linear-gradient(135deg, rgba(0, 170, 68, 0.05) 0%, rgba(0, 255, 102, 0.1) 100%)',
+                                        backgroundSize: '200% 200%',
                                         color: '#00AA44',
-                                        fontWeight: 600,
+                                        fontWeight: 700,
                                         '&:hover': {
-                                            backgroundColor: '#F0F9F5',
-                                            borderColor: '#1DB954',
-                                            color: '#1DB954',
+                                            borderWidth: '2px',
+                                            borderColor: '#00FF66',
+                                            background: 'linear-gradient(135deg, rgba(0, 255, 102, 0.15) 0%, rgba(0, 221, 85, 0.2) 100%)',
+                                            boxShadow: '0 8px 24px rgba(0, 255, 102, 0.3)',
+                                            animation: 'gradientShift 2s ease infinite',
                                         },
                                     }}
                                     endIcon={<TrendingDown />}
@@ -266,11 +280,53 @@ export default function Home() {
                 </Container>
             </Box>
 
-            {/* CTA Section */}
+            {/* Stats Section */}
             <Box sx={{
                 py: { xs: 8, md: 12 },
+                background: 'linear-gradient(135deg, #F0F9F5 0%, #E0F2EA 100%)',
+                borderTop: '1px solid #E0EFE5',
+            }}>
+                <Container maxWidth="lg">
+                    <Grid container spacing={4} textAlign="center">
+                        {[
+                            { label: 'Пользователей', value: '500+' },
+                            { label: 'Диагностик пройдено', value: '2.5K+' },
+                            { label: 'Точность анализа', value: '85%' },
+                        ].map((stat, idx) => (
+                            <Grid item xs={12} sm={6} md={4} key={idx}>
+                                <MotionBox
+                                    {...fadeInUp}
+                                    transition={{ ...fadeInUp.transition, delay: idx * 0.15 }}
+                                >
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 700,
+                                            background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
+                                            backgroundClip: 'text',
+                                            WebkitBackgroundClip: 'text',
+                                            WebkitTextFillColor: 'transparent',
+                                            mb: 1
+                                        }}
+                                    >
+                                        {stat.value}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ color: '#4B5563' }}>
+                                        {stat.label}
+                                    </Typography>
+                                </MotionBox>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Container>
+            </Box>
+
+            {/* CTA Section */}
+            <Box sx={{
+                py: { xs: 10, md: 14 },
                 backgroundColor: '#FFFFFF',
-                borderTop: '1px solid #E0EFE5'
+                borderTop: '1px solid #E0EFE5',
+                mb: { xs: 4, md: 8 },
             }}>
                 <Container maxWidth="md">
                     <MotionBox {...fadeInUp} sx={{ textAlign: 'center' }}>
@@ -279,7 +335,7 @@ export default function Home() {
                             sx={{
                                 color: '#111827',
                                 fontWeight: 700,
-                                mb: 2,
+                                mb: 3,
                                 letterSpacing: '-0.01em',
                             }}
                         >
@@ -289,7 +345,7 @@ export default function Home() {
                             variant="body1"
                             sx={{
                                 color: '#4B5563',
-                                mb: 4,
+                                mb: 5,
                                 fontSize: '1.125rem',
                             }}
                         >
@@ -300,13 +356,20 @@ export default function Home() {
                             size="large"
                             onClick={() => navigate('/assessment')}
                             sx={{
-                                px: 5,
-                                py: 1.5,
-                                fontSize: '1rem',
-                                borderRadius: 2,
-                                background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                                px: 6,
+                                py: 2.5,
+                                fontSize: '1.1rem',
+                                borderRadius: 3,
+                                background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
+                                backgroundSize: '300% 300%',
                                 color: 'white',
-                                boxShadow: '0 8px 24px rgba(0, 170, 68, 0.3)',
+                                fontWeight: 700,
+                                boxShadow: '0 8px 32px rgba(0, 255, 102, 0.4)',
+                                border: '2px solid rgba(255,255,255,0.2)',
+                                '&:hover': {
+                                    boxShadow: '0 16px 48px rgba(0, 255, 102, 0.6)',
+                                    animation: 'gradientPulse 2s ease infinite',
+                                },
                             }}
                             endIcon={<CheckCircle />}
                         >

@@ -13,23 +13,72 @@ import Recommendations from './pages/Recommendations';
 import Profile from './pages/Profile';
 import Layout from './components/layout/Layout';
 
-// ===== СДЭК ЗЕЛЕНАЯ ПАЛИТРА С ГРАДИЕНТАМИ =====
+// ===== МОЩНАЯ АНИМАЦИЯ ГРАДИЕНТА =====
+const gradientAnimation = `
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  @keyframes gradientPulse {
+    0%, 100% {
+      background-position: 0% 50%;
+      filter: brightness(1);
+    }
+    50% {
+      background-position: 100% 50%;
+      filter: brightness(1.15);
+    }
+  }
+  
+  @keyframes gradientRotate {
+    0% {
+      background-position: 0% 50%;
+    }
+    25% {
+      background-position: 100% 0%;
+    }
+    50% {
+      background-position: 100% 100%;
+    }
+    75% {
+      background-position: 0% 100%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+`;
+
+if (typeof document !== 'undefined') {
+    const style = document.createElement('style');
+    style.innerHTML = gradientAnimation;
+    document.head.appendChild(style);
+}
+
 const theme = createTheme({
     palette: {
         mode: 'light',
         primary: {
-            main: '#00AA44',        // Основной зеленый СДЭК
-            light: '#33CC77',       // Светлый зеленый
-            dark: '#007722',        // Темный зеленый
+            main: '#00AA44',
+            light: '#00FF66',
+            dark: '#006622',
             contrastText: '#ffffff',
         },
         secondary: {
-            main: '#1DB954',        // Spotify зеленый (дополнительный)
-            light: '#4DE369',
-            dark: '#1aa34a',
+            main: '#00DD55',
+            light: '#33FF88',
+            dark: '#00AA33',
         },
         background: {
-            default: '#F0F9F5',     // Светло-зеленый фон
+            default: '#F0F9F5',
             paper: '#FFFFFF',
         },
         grey: {
@@ -127,16 +176,21 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     borderRadius: 8,
-                    padding: '10px 24px',
+                    padding: '12px 28px',
                     fontSize: '1rem',
                     fontWeight: 600,
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 },
                 contained: {
-                    boxShadow: 'none',
+                    boxShadow: '0 4px 16px rgba(0, 170, 68, 0.3)',
+                    backgroundSize: '300% 300%',
                     '&:hover': {
-                        boxShadow: '0 8px 24px rgba(0, 170, 68, 0.25)',
-                        transform: 'translateY(-2px)',
+                        boxShadow: '0 12px 32px rgba(0, 255, 102, 0.5)',
+                        transform: 'translateY(-3px) scale(1.02)',
+                        animation: 'gradientPulse 2s ease infinite',
+                    },
+                    '&:active': {
+                        transform: 'translateY(-1px) scale(0.98)',
                     },
                 },
             },
@@ -150,8 +204,9 @@ const theme = createTheme({
                     border: '1px solid #E0EFE5',
                     transition: 'all 0.3s',
                     '&:hover': {
-                        borderColor: '#33CC77',
-                        boxShadow: '0 4px 12px rgba(0, 170, 68, 0.1)',
+                        borderColor: '#00FF66',
+                        boxShadow: '0 8px 24px rgba(0, 255, 102, 0.2)',
+                        transform: 'translateY(-4px)',
                     },
                 },
             },
@@ -169,11 +224,14 @@ const theme = createTheme({
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    background: 'linear-gradient(90deg, #FFFFFF 0%, #F0F9F5 50%, #E0F2EA 100%)',
+                    backgroundSize: '200% 200%',
                     color: '#111827',
-                    borderBottom: '2px solid #00AA44',
-                    boxShadow: 'none',
+                    borderBottom: '3px solid',
+                    borderImage: 'linear-gradient(90deg, #00AA44, #00FF66, #00DD55) 1',
+                    boxShadow: '0 4px 16px rgba(0, 170, 68, 0.15)',
                     backdropFilter: 'blur(10px)',
+                    animation: 'gradientShift 8s ease infinite',
                 },
             },
         },
