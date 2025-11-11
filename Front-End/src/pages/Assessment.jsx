@@ -8,25 +8,19 @@ import {
     Button,
     Box,
     LinearProgress,
-    Radio,
-    RadioGroup,
-    FormControlLabel,
-    FormControl,
     Stack,
     Chip,
+    Alert,
 } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowBack, ArrowForward, CheckCircle } from '@mui/icons-material';
+import { ArrowBack, ArrowForward, CheckCircle, Warning } from '@mui/icons-material';
 import { setAnswer, submitAssessment } from '../store/slices/assessmentSlice';
 import { ASSESSMENT_QUESTIONS } from '../utils/constants';
-
-const MotionPaper = motion.create(Paper);
-const MotionBox = motion.create(Box);
 
 const Assessment = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { answers, loading } = useSelector((state) => state.assessment);
+    const { isAuthenticated } = useSelector((state) => state.user);
     const [currentQuestion, setCurrentQuestion] = useState(0);
 
     const handleAnswer = (value) => {
@@ -46,7 +40,7 @@ const Assessment = () => {
     };
 
     const handleSubmit = async () => {
-        const result = await dispatch(submitAssessment(answers));
+        const result = await dispatch(submitAssessment());
         if (result.payload) {
             navigate('/dashboard');
         }
@@ -56,15 +50,30 @@ const Assessment = () => {
     const question = ASSESSMENT_QUESTIONS[currentQuestion];
     const currentAnswer = answers[currentQuestion];
 
+    const options = [
+        { value: 1, label: 'Никогда', color: '#4caf50' },
+        { value: 2, label: 'Редко', color: '#8bc34a' },
+        { value: 3, label: 'Иногда', color: '#ff9800' },
+        { value: 4, label: 'Часто', color: '#f44336' },
+        { value: 5, label: 'Всегда', color: '#c62828' },
+    ];
+
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
-            <MotionPaper
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                elevation={3}
-                sx={{ p: 4 }}
-            >
+            <Paper elevation={3} sx={{ p: 4 }}>
+                {/* Информация о синхронизации */}
+                {!isAuthenticated && (
+                    <Alert severity="info" icon={<Warning />} sx={{ mb: 3 }}>
+                        Вы не авторизованы. Результаты будут сохранены локально и отправлены на сервер после авторизации.
+                    </Alert>
+                )}
+
+                {isAuthenticated && (
+                    <Alert severity="success" sx={{ mb: 3 }}>
+                        ✓ Данные будут синхронизированы с базой данных
+                    </Alert>
+                )}
+
                 {/* Header */}
                 <Box mb={4}>
                     <Typography variant="h4" gutterBottom fontWeight="bold" color="primary">
@@ -73,79 +82,70 @@ const Assessment = () => {
                     <Typography variant="body1" color="text.secondary" paragraph>
                         Вопрос {currentQuestion + 1} из {ASSESSMENT_QUESTIONS.length}
                     </Typography>
-                    <LinearProgress
-                        variant="determinate"
-                        value={progress}
-                        sx={{ height: 8, borderRadius: 4 }}
-                    />
+                    <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 4 }} />
                 </Box>
 
                 {/* Question */}
-                <AnimatePresence mode="wait">
-                    <MotionBox
-                        key={currentQuestion}
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <Paper elevation={0} sx={{ p: 3, backgroundColor: 'grey.50', mb: 4 }}>
-                            <Typography variant="h5" gutterBottom>
-                                {question.text}
-                            </Typography>
-                            {question.subtitle && (
-                                <Typography variant="body2" color="text.secondary">
-                                    {question.subtitle}
-                                </Typography>
-                            )}
-                        </Paper>
+                <Paper elevation={0} sx={{ p: 3, backgroundColor: 'grey.50', mb: 4 }}>
+                    <Typography variant="h5" gutterBottom fontWeight="bold">
+                        {question.text}
+                    </Typography>
+                    {question.subtitle && (
+                        <Typography variant="body2" color="text.secondary">
+                            {question.subtitle}
+                        </Typography>
+                    )}
+                </Paper>
 
-                        <FormControl component="fieldset" fullWidth>
-                            <RadioGroup value={currentAnswer || ''} onChange={(e) => handleAnswer(e.target.value)}>
-                                <Stack spacing={2}>
-                                    {[
-                                        { value: 1, label: 'Никогда', color: 'success' },
-                                        { value: 2, label: 'Редко', color: 'info' },
-                                        { value: 3, label: 'Иногда', color: 'warning' },
-                                        { value: 4, label: 'Часто', color: 'error' },
-                                        { value: 5, label: 'Всегда', color: 'error' },
-                                    ].map((option) => (
-                                        <MotionPaper
-                                            key={option.value}
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            elevation={currentAnswer === option.value ? 8 : 1}
-                                            sx={{
-                                                p: 2,
-                                                cursor: 'pointer',
-                                                border: currentAnswer === option.value ? 2 : 0,
-                                                borderColor: 'primary.main',
-                                                backgroundColor: currentAnswer === option.value ? 'primary.light' : 'white',
-                                                transition: 'all 0.3s',
-                                            }}
-                                            onClick={() => handleAnswer(option.value)}
-                                        >
-                                            <FormControlLabel
-                                                value={option.value}
-                                                control={<Radio />}
-                                                label={
-                                                    <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-                                                        <Typography variant="h6">{option.label}</Typography>
-                                                        <Chip label={option.value} color={option.color} size="small" />
-                                                    </Box>
-                                                }
-                                                sx={{ m: 0, width: '100%' }}
-                                            />
-                                        </MotionPaper>
-                                    ))}
-                                </Stack>
-                            </RadioGroup>
-                        </FormControl>
-                    </MotionBox>
-                </AnimatePresence>
+                {/* Answers - Только подсвечивающиеся кнопки */}
+                <Box sx={{ mb: 4 }}>
+                    <Stack spacing={2}>
+                        {options.map((option) => (
+                            <Paper
+                                key={option.value}
+                                elevation={currentAnswer === option.value ? 8 : 0}
+                                sx={{
+                                    p: 2.5,
+                                    cursor: 'pointer',
+                                    border: currentAnswer === option.value ? `3px solid ${option.color}` : '2px solid transparent',
+                                    backgroundColor: currentAnswer === option.value ? `${option.color}15` : 'white',
+                                    transition: 'all 0.3s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    '&:hover': {
+                                        backgroundColor: `${option.color}25`,
+                                        boxShadow: `0 4px 16px ${option.color}40`,
+                                    },
+                                }}
+                                onClick={() => handleAnswer(option.value)}
+                            >
+                                <Typography
+                                    variant="h6"
+                                    fontWeight={currentAnswer === option.value ? 'bold' : '500'}
+                                    sx={{
+                                        color: currentAnswer === option.value ? option.color : 'text.primary',
+                                        transition: 'color 0.3s',
+                                    }}
+                                >
+                                    {option.label}
+                                </Typography>
+                                <Chip
+                                    label={option.value}
+                                    sx={{
+                                        backgroundColor: currentAnswer === option.value ? option.color : 'grey.300',
+                                        color: 'white',
+                                        fontWeight: 'bold',
+                                        fontSize: '1rem',
+                                    }}
+                                />
+                            </Paper>
+                        ))}
+                    </Stack>
+                </Box>
 
                 {/* Navigation */}
-                <Stack direction="row" spacing={2} justifyContent="space-between" mt={4}>
+                <Stack direction="row" spacing={2} justifyContent="space-between">
                     <Button
                         variant="outlined"
                         startIcon={<ArrowBack />}
@@ -163,9 +163,6 @@ const Assessment = () => {
                             onClick={handleNext}
                             disabled={!currentAnswer}
                             size="large"
-                            component={motion.button}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
                         >
                             Далее
                         </Button>
@@ -176,15 +173,12 @@ const Assessment = () => {
                             onClick={handleSubmit}
                             disabled={!currentAnswer || loading}
                             size="large"
-                            component={motion.button}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
                         >
                             {loading ? 'Отправка...' : 'Завершить тест'}
                         </Button>
                     )}
                 </Stack>
-            </MotionPaper>
+            </Paper>
         </Container>
     );
 };
