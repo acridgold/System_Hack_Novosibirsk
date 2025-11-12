@@ -280,47 +280,6 @@ export default function Home() {
                 </Container>
             </Box>
 
-            {/* Stats Section */}
-            <Box sx={{
-                py: { xs: 8, md: 12 },
-                background: 'linear-gradient(135deg, #F0F9F5 0%, #E0F2EA 100%)',
-                borderTop: '1px solid #E0EFE5',
-            }}>
-                <Container maxWidth="lg">
-                    <Grid container spacing={4} textAlign="center">
-                        {[
-                            { label: 'Пользователей', value: '500+' },
-                            { label: 'Диагностик пройдено', value: '2.5K+' },
-                            { label: 'Точность анализа', value: '85%' },
-                        ].map((stat, idx) => (
-                            <Grid item xs={12} sm={6} md={4} key={idx}>
-                                <MotionBox
-                                    {...fadeInUp}
-                                    transition={{ ...fadeInUp.transition, delay: idx * 0.15 }}
-                                >
-                                    <Typography
-                                        variant="h3"
-                                        sx={{
-                                            fontWeight: 700,
-                                            background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
-                                            backgroundClip: 'text',
-                                            WebkitBackgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent',
-                                            mb: 1
-                                        }}
-                                    >
-                                        {stat.value}
-                                    </Typography>
-                                    <Typography variant="body1" sx={{ color: '#4B5563' }}>
-                                        {stat.label}
-                                    </Typography>
-                                </MotionBox>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Container>
-            </Box>
-
             {/* CTA Section */}
             <Box sx={{
                 py: { xs: 10, md: 14 },
