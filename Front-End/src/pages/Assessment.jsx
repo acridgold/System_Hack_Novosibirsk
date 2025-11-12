@@ -59,11 +59,11 @@ const Assessment = () => {
     const currentAnswer = answers[currentQuestion];
 
     const options = [
-        { value: 1, label: 'Никогда', color: '#10B981' },
+        { value: 1, label: 'Никогда', color: '#00dd55' },
         { value: 2, label: 'Редко', color: '#00DD55' },
-        { value: 3, label: 'Иногда', color: '#F59E0B' },
-        { value: 4, label: 'Часто', color: '#EF4444' },
-        { value: 5, label: 'Всегда', color: '#DC2626' },
+        { value: 3, label: 'Иногда', color: '#00dd55' },
+        { value: 4, label: 'Часто', color: '#00dd55' },
+        { value: 5, label: 'Всегда', color: '#00dd55' },
     ];
 
     return (
