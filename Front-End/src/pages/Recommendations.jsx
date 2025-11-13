@@ -1,0 +1,464 @@
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    Container,
+    Grid,
+    Paper,
+    Typography,
+    Box,
+    Card,
+    CardContent,
+    Chip,
+    Button,
+    Stack,
+    Avatar,
+    Alert,
+
+} from '@mui/material';
+import {
+    Lightbulb,
+    SelfImprovement,
+    Schedule,
+    FitnessCenter,
+    CheckCircle,
+    ArrowForward,
+    Lock,
+    Login as LoginIcon,
+    Info,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { fetchRecommendations, localMarkComplete } from '../store/slices/recommendationsSlice';
+
+const Recommendations = () => {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { tips} = useSelector((state) => state.recommendations);
+    const { isAuthenticated, user } = useSelector((state) => state.user);
+    const { answers } = useSelector((state) => state.assessment);
+    const [completed, setCompleted] = React.useState({});
+
+    // Проверяем есть ли локальные результаты
+    const hasLocalResults = Object.keys(answers).length > 0;
+
+    useEffect(() => {
+        dispatch(fetchRecommendations());
+    }, [dispatch, isAuthenticated]);
+
+    const handleToggleComplete = (id) => {
+        setCompleted((prev) => ({ ...prev, [id]: !prev[id] }));
+        dispatch(localMarkComplete(id));
+    };
+
+    // Mock рекомендации (базовые, для неавторизованных пользователей)
+    const basicTips = [
+        {
+            id: 1,
+            category: 'Медитация',
+            icon: <SelfImprovement />,
+            color: '#9c27b0',
+            title: 'Практикуйте осознанность',
+            description: 'Уделяйте 10 минут в день медитации или дыхательным упражнениям для снижения стресса',
+            priority: 'high',
+            duration: '10 мин/день',
+        },
+        {
+            id: 2,
+            category: 'Тайм-менеджмент',
+            icon: <Schedule />,
+            color: '#2196f3',
+            title: 'Используйте технику Pomodoro',
+            description: 'Работайте 25 минут, затем делайте 5-минутный перерыв для повышения концентрации',
+            priority: 'high',
+            duration: '30 мин циклы',
+        },
+        {
+            id: 3,
+            category: 'Физическая активность',
+            icon: <FitnessCenter />,
+            color: '#4caf50',
+            title: 'Регулярные упражнения',
+            description: 'Занимайтесь физической активностью минимум 3 раза в неделю по 30 минут',
+            priority: 'medium',
+            duration: '3 раза/неделю',
+        },
+    ];
+
+    const recommendationsList = tips.length > 0 ? tips : basicTips;
+
+    const priorityColors = {
+        high: 'error',
+        medium: 'warning',
+        low: 'info',
+    };
+
+    const priorityLabels = {
+        high: 'Высокий приоритет',
+        medium: 'Средний приоритет',
+        low: 'Низкий приоритет',
+    };
+
+    // ===== ЕСЛИ НЕ АВТОРИЗОВАН И НЕТ ЛОКАЛЬНЫХ РЕЗУЛЬТАТОВ =====
+    if (!isAuthenticated && !hasLocalResults) {
+        return (
+            <Container maxWidth="lg" sx={{ py: 8 }}>
+                <Box
+                    sx={{
+                        textAlign: 'center',
+                        p: 6,
+                        backgroundColor: 'background.paper',
+                        borderRadius: 3,
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    }}
+                >
+                    <Avatar
+                        sx={{
+                            width: 100,
+                            height: 100,
+                            mx: 'auto',
+                            mb: 3,
+                            bgcolor: 'warning.main',
+                            fontSize: '3rem',
+                        }}
+                    >
+                        <Lock />
+                    </Avatar>
+
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        Персональные рекомендации
+                    </Typography>
+
+                    <Typography variant="body1" color="text.secondary" paragraph sx={{ maxWidth: 500, mx: 'auto', mb: 4 }}>
+                        Сначала пройдите диагностику выгорания, а затем авторизуйтесь, чтобы получить персональные рекомендации.
+                    </Typography>
+
+                    <Alert severity="info" sx={{ mb: 4, justifyContent: 'center' }}>
+                        Мы подберем советы на основе вашего уровня выгорания и психологического состояния.
+                    </Alert>
+
+                    <Box display="flex" gap={2} justifyContent="center" flexWrap="wrap">
+                        <Button
+                            variant="contained"
+                            size="large"
+                            onClick={() => navigate('/assessment')}
+                            sx={{ minWidth: 200 }}
+                        >
+                            Пройти диагностику
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            size="large"
+                            onClick={() => navigate('/')}
+                            sx={{ minWidth: 200 }}
+                        >
+                            На главную
+                        </Button>
+                    </Box>
+                </Box>
+            </Container>
+        );
+    }
+
+    // ===== ЕСЛИ НЕ АВТОРИЗОВАН, НО ЕСТЬ ЛОКАЛЬНЫЕ РЕЗУЛЬТАТЫ =====
+    if (!isAuthenticated && hasLocalResults) {
+        return (
+            <Container maxWidth="lg" sx={{ py: 4 }}>
+                {/* Header */}
+                <Paper
+                    elevation={0}
+                    sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #9c27b0 0%, #e91e63 100%)', color: 'white' }}
+                >
+                    <Box display="flex" alignItems="center" mb={2}>
+                        <Lightbulb sx={{ fontSize: 48, mr: 2 }} />
+                        <div>
+                            <Typography variant="h3" fontWeight="bold">
+                                Общие рекомендации
+                            </Typography>
+                            <Typography variant="body1">
+                                Базовые советы для управления стрессом (авторизуйтесь для персональных)
+                            </Typography>
+                        </div>
+                    </Box>
+                </Paper>
+
+                {/* Info Alert */}
+                <Alert severity="info" icon={<Info />} sx={{ mb: 4 }}>
+                    <Box>
+                        <Typography variant="body2" fontWeight="bold" gutterBottom>
+                            💡 Совет: Авторизуйтесь для получения:
+                        </Typography>
+                        <Typography variant="body2">
+                            ✓ Персональных рекомендаций • ✓ Полного списка советов • ✓ Индивидуального плана действий
+                        </Typography>
+                    </Box>
+                </Alert>
+
+                {/* Progress Stats */}
+                <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+                    <Grid container spacing={3} textAlign="center">
+                        <Grid item xs={12} md={4}>
+                            <Typography variant="h3" color="primary" fontWeight="bold">
+                                {Object.keys(completed).filter((k) => completed[k]).length}
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                Начали выполнять
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Typography variant="h3" color="warning.main" fontWeight="bold">
+                                {basicTips.length}
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                Базовых советов
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Typography variant="h3" color="success.main" fontWeight="bold">
+                                {Math.round((Object.keys(completed).filter((k) => completed[k]).length / basicTips.length) * 100) || 0}%
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                Прогресс сегодня
+                            </Typography>
+                        </Grid>
+                    </Grid>
+                </Paper>
+
+                {/* Recommendations Grid - Limited to 3 */}
+                <Grid container spacing={3} mb={4}>
+                    {basicTips.slice(0, 3).map((tip, index) => (
+                        <Grid item xs={12} md={4} key={tip.id}>
+                            <Card
+                                elevation={completed[tip.id] ? 1 : 3}
+                                sx={{
+                                    height: '100%',
+                                    borderLeft: `6px solid ${tip.color}`,
+                                    opacity: completed[tip.id] ? 0.7 : 1,
+                                    position: 'relative',
+                                }}
+                            >
+                                <CardContent sx={{ p: 3 }}>
+                                    {/* Header */}
+                                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                                        <Box display="flex" alignItems="center" gap={1}>
+                                            <Avatar sx={{ bgcolor: tip.color, width: 48, height: 48 }}>
+                                                {tip.icon}
+                                            </Avatar>
+                                            <div>
+                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                    {tip.category}
+                                                </Typography>
+                                                <Chip
+                                                    label={priorityLabels[tip.priority]}
+                                                    color={priorityColors[tip.priority]}
+                                                    size="small"
+                                                />
+                                            </div>
+                                        </Box>
+                                        <Box
+                                            onClick={() => handleToggleComplete(tip.id)}
+                                            sx={{
+                                                cursor: 'pointer',
+                                                color: completed[tip.id] ? 'success.main' : 'grey.400',
+                                                transition: 'color 0.3s',
+                                            }}
+                                        >
+                                            <CheckCircle sx={{ fontSize: 32 }} />
+                                        </Box>
+                                    </Box>
+
+                                    {/* Content */}
+                                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                        {tip.title}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" paragraph>
+                                        {tip.description}
+                                    </Typography>
+
+                                    {/* Footer */}
+                                    <Chip
+                                        icon={<Schedule />}
+                                        label={tip.duration}
+                                        size="small"
+                                        variant="outlined"
+                                    />
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+
+                {/* Upgrade Alert */}
+                <Paper elevation={3} sx={{ p: 4, backgroundColor: 'primary.light', borderLeft: '5px solid' }}>
+                    <Grid container spacing={3} alignItems="center">
+                        <Grid item xs={12} md={8}>
+                            <Typography variant="h5" fontWeight="bold" gutterBottom>
+                                🔓 Больше рекомендаций
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary" paragraph>
+                                Авторизованные пользователи получают полный набор персональных рекомендаций, адаптированных под их результаты диагностики.
+                            </Typography>
+                            <Stack direction="row" spacing={2}>
+                                <Typography variant="body2">✓ Полный список советов</Typography>
+                                <Typography variant="body2">✓ Индивидуальный план</Typography>
+                                <Typography variant="body2">✓ Отслеживание выполнения</Typography>
+                            </Stack>
+                        </Grid>
+                        <Grid item xs={12} md={4} sx={{ textAlign: 'center' }}>
+                            <Button
+                                variant="contained"
+                                size="large"
+                                startIcon={<LoginIcon />}
+                                onClick={() => navigate('/login')}
+                                fullWidth
+                            >
+                                Авторизоваться
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Paper>
+            </Container>
+        );
+    }
+
+    // ===== ЕСЛИ АВТОРИЗОВАН =====
+    return (
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            {/* Header */}
+            <Paper
+                elevation={0}
+                sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #9c27b0 0%, #e91e63 100%)', color: 'white' }}
+            >
+                <Box display="flex" alignItems="center" mb={2}>
+                    <Lightbulb sx={{ fontSize: 48, mr: 2 }} />
+                    <div>
+                        <Typography variant="h3" fontWeight="bold">
+                            Персональные рекомендации
+                        </Typography>
+                        <Typography variant="body1">
+                            AI-советы для {user?.name}, адаптированные под ваши результаты
+                        </Typography>
+                    </div>
+                </Box>
+            </Paper>
+
+            {/* Progress Stats */}
+            <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+                <Grid container spacing={3} textAlign="center">
+                    <Grid item xs={12} md={3}>
+                        <Typography variant="h3" color="primary" fontWeight="bold">
+                            {Object.keys(completed).filter((k) => completed[k]).length}
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            Выполнено
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                        <Typography variant="h3" color="warning.main" fontWeight="bold">
+                            {recommendationsList.length}
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            Всего рекомендаций
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                        <Typography variant="h3" color="success.main" fontWeight="bold">
+                            {Math.round((Object.keys(completed).filter((k) => completed[k]).length / recommendationsList.length) * 100) || 0}%
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            Прогресс
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                        <Typography variant="h3" color="info.main" fontWeight="bold">
+                            7
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            Дней подряд
+                        </Typography>
+                    </Grid>
+                </Grid>
+            </Paper>
+
+            {/* Recommendations Grid */}
+            <Grid container spacing={3} mb={4}>
+                {recommendationsList.map((tip, index) => (
+                    <Grid item xs={12} md={6} key={tip.id}>
+                        <Card
+                            elevation={completed[tip.id] ? 1 : 3}
+                            sx={{
+                                height: '100%',
+                                borderLeft: `6px solid ${tip.color}`,
+                                opacity: completed[tip.id] ? 0.7 : 1,
+                            }}
+                        >
+                            <CardContent sx={{ p: 3 }}>
+                                {/* Header */}
+                                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                                    <Box display="flex" alignItems="center" gap={1}>
+                                        <Avatar sx={{ bgcolor: tip.color, width: 48, height: 48 }}>
+                                            {tip.icon}
+                                        </Avatar>
+                                        <div>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                                {tip.category}
+                                            </Typography>
+                                            <Chip
+                                                label={priorityLabels[tip.priority]}
+                                                color={priorityColors[tip.priority]}
+                                                size="small"
+                                            />
+                                        </div>
+                                    </Box>
+                                    <Box
+                                        onClick={() => handleToggleComplete(tip.id)}
+                                        sx={{
+                                            cursor: 'pointer',
+                                            color: completed[tip.id] ? 'success.main' : 'grey.400',
+                                            transition: 'color 0.3s',
+                                            '&:hover': { color: 'success.main' },
+                                        }}
+                                    >
+                                        <CheckCircle sx={{ fontSize: 32 }} />
+                                    </Box>
+                                </Box>
+
+                                {/* Content */}
+                                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                    {tip.title}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" paragraph>
+                                    {tip.description}
+                                </Typography>
+
+                                {/* Footer */}
+                                <Box display="flex" alignItems="center" justifyContent="space-between" mt={2}>
+                                    <Chip
+                                        icon={<Schedule />}
+                                        label={tip.duration}
+                                        size="small"
+                                        variant="outlined"
+                                    />
+                                    <Button size="small" endIcon={<ArrowForward />} sx={{ color: tip.color }}>
+                                        Подробнее
+                                    </Button>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
+
+            {/* Action Button */}
+            <Box textAlign="center">
+                <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<Lightbulb />}
+                >
+                    Получить новые рекомендации
+                </Button>
+            </Box>
+        </Container>
+    );
+};
+
+export default Recommendations;

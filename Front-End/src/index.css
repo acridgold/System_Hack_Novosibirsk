@@ -1,0 +1,84 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg1: #0f172a;
+  --bg2: #0b2545;
+  --card: rgba(255,255,255,0.04);
+  --accent: #7c5cff;
+  --glass: rgba(255,255,255,0.06);
+  --radius: 16px;
+  --maxw: 760px;
+  --gap: 1rem;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+html, body, #root { height: 100%; }
+body {
+  font-family: var(--font);
+  color: #e6eef8;
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,0.14), transparent),
+              linear-gradient(180deg, var(--bg1), var(--bg2));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Центрированная карточка-обложка */
+.cover-root {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+.cover-card {
+  width: 100%;
+  max-width: var(--maxw);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: var(--radius);
+  padding: 48px;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(8px) saturate(120%);
+  display: grid;
+  gap: var(--gap);
+  justify-items: start;
+}
+.logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), #5ad0ff);
+  padding: 12px;
+  box-shadow: 0 6px 18px rgba(124,92,255,0.16);
+  margin-bottom: 8px;
+}
+h1 {
+  font-size: 28px;
+  line-height: 1.05;
+  margin-bottom: 6px;
+  font-weight: 800;
+}
+.lead {
+  color: rgba(230,238,248,0.85);
+  margin-bottom: 18px;
+  max-width: 60ch;
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.cta {
+  display: inline-block;
+  padding: 10px 16px;
+  background: linear-gradient(90deg, var(--accent), #5ad0ff);
+  color: #071021;
+  font-weight: 700;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 8px 28px rgba(124,92,255,0.18);
+}
+
+/* Адаптив */
+@media (max-width: 640px) {
+  .cover-card { padding: 28px; border-radius: 12px; }
+  h1 { font-size: 22px; }
+  .logo { width: 52px; height: 52px; }
+}
