@@ -20,17 +20,17 @@ export const submitAssessment = createAsyncThunk(
             };
 
             // ===== MOCK ПОЛЬЗОВАТЕЛЬ =====
-            if (user?.email === 'user@example.com') {
-                // Имитируем задержку
-                await new Promise((resolve) => setTimeout(resolve, 500));
-
-                const results = calculateResults(answers);
-                return {
-                    ...results,
-                    timestamp: payload.timestamp,
-                    date: payload.timestamp.split('T')[0],
-                };
-            }
+            // if (user?.email === 'user@example.com') {
+            //     // Имитируем задержку
+            //     await new Promise((resolve) => setTimeout(resolve, 500));
+            //
+            //     const results = calculateResults(answers);
+            //     return {
+            //         ...results,
+            //         timestamp: payload.timestamp,
+            //         date: payload.timestamp.split('T')[0],
+            //     };
+            // }
 
             // ===== РЕАЛЬНЫЕ ПОЛЬЗОВАТЕЛИ =====
             if (user?.id) {
@@ -99,17 +99,17 @@ export const fetchLatestAssessment = createAsyncThunk(
             const { user } = getState().user;
 
             // ===== MOCK ДАННЫЕ =====
-            if (user?.email === 'user@example.com') {
-                await new Promise((resolve) => setTimeout(resolve, 300));
-                const latest = MOCK_ASSESSMENT_HISTORY[0];
-
-                // Добавляем date если нет
-                if (latest.timestamp && !latest.date) {
-                    latest.date = latest.timestamp.split('T')[0];
-                }
-
-                return latest;
-            }
+            // if (user?.email === 'user@example.com') {
+            //     await new Promise((resolve) => setTimeout(resolve, 300));
+            //     const latest = MOCK_ASSESSMENT_HISTORY[0];
+            //
+            //     // Добавляем date если нет
+            //     if (latest.timestamp && !latest.date) {
+            //         latest.date = latest.timestamp.split('T')[0];
+            //     }
+            //
+            //     return latest;
+            // }
 
             // ===== РЕАЛЬНАЯ ЗАГРУЗКА =====
             const data = await api.get('/assessment/latest');

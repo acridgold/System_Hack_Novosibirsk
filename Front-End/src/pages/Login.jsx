@@ -32,10 +32,14 @@ export default function Login() {
 
         try {
             const result = await dispatch(loginUser({ email, password }));
-            if (result.payload) {
+
+            // Проверяем успешность авторизации
+            if (loginUser.fulfilled.match(result)) {
+                // Успешная авторизация - переходим на dashboard
                 navigate('/dashboard');
             } else {
-                setError('Ошибка при входе. Проверьте данные.');
+                // Ошибка авторизации - показываем сообщение
+                setError(result.payload || 'Неверный логин или пароль');
             }
         } catch (err) {
             setError('Ошибка подключения к серверу');
@@ -57,7 +61,6 @@ export default function Login() {
                 background: 'radial-gradient(circle at 30% 50%, #E0F2EA 0%, #F0F9F5 30%, #D0EBDF 60%, #B0E3CF 100%)',
                 backgroundSize: '400% 400%',
                 animation: 'gradientShift 15s ease infinite',
-                // ===== СЕТКА ИЗ ТОЧЕК =====
                 '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -65,14 +68,11 @@ export default function Login() {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundImage: `
-                        radial-gradient(circle, rgba(0, 170, 68, 0.12) 1px, transparent 1px)
-                    `,
+                    backgroundImage: `radial-gradient(circle, rgba(0, 170, 68, 0.12) 1px, transparent 1px)`,
                     backgroundSize: '24px 24px',
                     pointerEvents: 'none',
                     zIndex: 1,
                 },
-                // ===== ДОПОЛНИТЕЛЬНЫЕ АКЦЕНТНЫЕ ТОЧКИ =====
                 '&::after': {
                     content: '""',
                     position: 'absolute',
@@ -80,9 +80,7 @@ export default function Login() {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundImage: `
-                        radial-gradient(circle, rgba(0, 255, 102, 0.08) 2px, transparent 2px)
-                    `,
+                    backgroundImage: `radial-gradient(circle, rgba(0, 255, 102, 0.08) 2px, transparent 2px)`,
                     backgroundSize: '48px 48px',
                     backgroundPosition: '12px 12px',
                     pointerEvents: 'none',
@@ -341,7 +339,7 @@ export default function Login() {
                         <Typography variant="body2" sx={{ color: '#4B5563' }}>
                             Нет аккаунта?{' '}
                             <Link
-                                onClick={() => navigate('/')}
+                                onClick={() => navigate('/register')}
                                 sx={{
                                     color: '#00AA44',
                                     fontWeight: 600,
@@ -349,12 +347,12 @@ export default function Login() {
                                     textDecoration: 'none',
                                     transition: 'all 0.2s',
                                     '&:hover': {
-                                        color: '#00ff33',
+                                        color: '#00FF66',
                                         textDecoration: 'underline',
                                     },
                                 }}
                             >
-                                Вернуться на главную
+                                Зарегистрироваться
                             </Link>
                         </Typography>
                     </Box>
