@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -8,8 +8,6 @@ import {
     Button,
     Box,
     LinearProgress,
-    Stack,
-    Chip,
     Alert,
 } from '@mui/material';
 import { ArrowBack, ArrowForward, CheckCircle, Warning } from '@mui/icons-material';
@@ -22,6 +20,14 @@ const Assessment = () => {
     const { answers, loading } = useSelector((state) => state.assessment);
     const { isAuthenticated } = useSelector((state) => state.user);
     const [currentQuestion, setCurrentQuestion] = useState(0);
+
+    // ===== АВТОМАТИЧЕСКАЯ ПРОКРУТКА ВВЕРХ =====
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+        });
+    }, [currentQuestion]);
 
     const handleAnswer = (value) => {
         dispatch(setAnswer({ questionId: currentQuestion, value: parseInt(value) }));
@@ -40,9 +46,11 @@ const Assessment = () => {
     };
 
     const handleSubmit = async () => {
+        console.log('Submitting assessment...');
         const result = await dispatch(submitAssessment());
+        console.log('Result:', result);
         if (result.payload) {
-            navigate('/dashboard');
+            setTimeout(() => navigate('/dashboard'), 300);
         }
     };
 
@@ -51,30 +59,22 @@ const Assessment = () => {
     const currentAnswer = answers[currentQuestion];
 
     const options = [
-        { value: 1, label: 'Никогда', color: '#4caf50' },
-        { value: 2, label: 'Редко', color: '#8bc34a' },
-        { value: 3, label: 'Иногда', color: '#ff9800' },
-        { value: 4, label: 'Часто', color: '#f44336' },
-        { value: 5, label: 'Всегда', color: '#c62828' },
+        { value: 1, label: 'Никогда', color: '#00dd55' },
+        { value: 2, label: 'Редко', color: '#00DD55' },
+        { value: 3, label: 'Иногда', color: '#00dd55' },
+        { value: 4, label: 'Часто', color: '#00dd55' },
+        { value: 5, label: 'Всегда', color: '#00dd55' },
     ];
 
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
-            <Paper elevation={3} sx={{ p: 4 }}>
-                {/* Информация о синхронизации */}
+            <Paper elevation={3} sx={{ p: 4, border: '1px solid #E0EFE5' }}>
                 {!isAuthenticated && (
                     <Alert severity="info" icon={<Warning />} sx={{ mb: 3 }}>
-                        Вы не авторизованы. Результаты будут сохранены локально и отправлены на сервер после авторизации.
+                        Вы не авторизованы. Результаты будут сохранены локально.
                     </Alert>
                 )}
 
-                {isAuthenticated && (
-                    <Alert severity="success" sx={{ mb: 3 }}>
-                        ✓ Данные будут синхронизированы с базой данных
-                    </Alert>
-                )}
-
-                {/* Header */}
                 <Box mb={4}>
                     <Typography variant="h4" gutterBottom fontWeight="bold" color="primary">
                         Диагностика выгорания
@@ -82,11 +82,21 @@ const Assessment = () => {
                     <Typography variant="body1" color="text.secondary" paragraph>
                         Вопрос {currentQuestion + 1} из {ASSESSMENT_QUESTIONS.length}
                     </Typography>
-                    <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 4 }} />
+                    <LinearProgress
+                        variant="determinate"
+                        value={progress}
+                        sx={{
+                            height: 8,
+                            borderRadius: 4,
+                            backgroundColor: '#E0EFE5',
+                            '& .MuiLinearProgress-bar': {
+                                background: 'linear-gradient(90deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
+                            },
+                        }}
+                    />
                 </Box>
 
-                {/* Question */}
-                <Paper elevation={0} sx={{ p: 3, backgroundColor: 'grey.50', mb: 4 }}>
+                <Paper elevation={0} sx={{ p: 3, backgroundColor: 'grey.50', mb: 4, border: '1px solid #E0EFE5' }}>
                     <Typography variant="h5" gutterBottom fontWeight="bold">
                         {question.text}
                     </Typography>
@@ -97,61 +107,74 @@ const Assessment = () => {
                     )}
                 </Paper>
 
-                {/* Answers - Только подсвечивающиеся кнопки */}
                 <Box sx={{ mb: 4 }}>
-                    <Stack spacing={2}>
-                        {options.map((option) => (
-                            <Paper
-                                key={option.value}
-                                elevation={currentAnswer === option.value ? 8 : 0}
+                    {options.map((option) => (
+                        <Paper
+                            key={option.value}
+                            elevation={currentAnswer === option.value ? 8 : 0}
+                            sx={{
+                                p: 2.5,
+                                mb: 2,
+                                cursor: 'pointer',
+                                border: currentAnswer === option.value ? `3px solid ${option.color}` : '2px solid #E0EFE5',
+                                backgroundColor: currentAnswer === option.value ? `${option.color}15` : 'white',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                '&:hover': {
+                                    backgroundColor: `${option.color}25`,
+                                    boxShadow: `0 4px 16px ${option.color}40`,
+                                    transform: 'translateY(-2px)',
+                                },
+                            }}
+                            onClick={() => handleAnswer(option.value)}
+                        >
+                            <Typography
+                                variant="h6"
+                                fontWeight={currentAnswer === option.value ? 'bold' : '500'}
                                 sx={{
-                                    p: 2.5,
-                                    cursor: 'pointer',
-                                    border: currentAnswer === option.value ? `3px solid ${option.color}` : '2px solid transparent',
-                                    backgroundColor: currentAnswer === option.value ? `${option.color}15` : 'white',
-                                    transition: 'all 0.3s ease',
+                                    color: currentAnswer === option.value ? option.color : 'text.primary',
+                                    transition: 'color 0.3s',
+                                }}
+                            >
+                                {option.label}
+                            </Typography>
+                            <Box
+                                sx={{
+                                    backgroundColor: currentAnswer === option.value ? option.color : 'grey.300',
+                                    color: 'white',
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: '50%',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    '&:hover': {
-                                        backgroundColor: `${option.color}25`,
-                                        boxShadow: `0 4px 16px ${option.color}40`,
-                                    },
+                                    justifyContent: 'center',
+                                    fontWeight: 'bold',
+                                    transition: 'all 0.3s',
                                 }}
-                                onClick={() => handleAnswer(option.value)}
                             >
-                                <Typography
-                                    variant="h6"
-                                    fontWeight={currentAnswer === option.value ? 'bold' : '500'}
-                                    sx={{
-                                        color: currentAnswer === option.value ? option.color : 'text.primary',
-                                        transition: 'color 0.3s',
-                                    }}
-                                >
-                                    {option.label}
-                                </Typography>
-                                <Chip
-                                    label={option.value}
-                                    sx={{
-                                        backgroundColor: currentAnswer === option.value ? option.color : 'grey.300',
-                                        color: 'white',
-                                        fontWeight: 'bold',
-                                        fontSize: '1rem',
-                                    }}
-                                />
-                            </Paper>
-                        ))}
-                    </Stack>
+                                {option.value}
+                            </Box>
+                        </Paper>
+                    ))}
                 </Box>
 
-                {/* Navigation */}
-                <Stack direction="row" spacing={2} justifyContent="space-between">
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between' }}>
                     <Button
                         variant="outlined"
                         startIcon={<ArrowBack />}
                         onClick={handleBack}
                         disabled={currentQuestion === 0}
                         size="large"
+                        sx={{
+                            borderColor: '#E0EFE5',
+                            color: '#4B5563',
+                            '&:hover': {
+                                borderColor: '#00AA44',
+                                backgroundColor: 'rgba(0, 170, 68, 0.05)',
+                            },
+                        }}
                     >
                         Назад
                     </Button>
@@ -163,6 +186,20 @@ const Assessment = () => {
                             onClick={handleNext}
                             disabled={!currentAnswer}
                             size="large"
+                            sx={{
+                                background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
+                                backgroundSize: '300% 300%',
+                                color: 'white',
+                                fontWeight: 600,
+                                boxShadow: '0 4px 16px rgba(0, 255, 102, 0.3)',
+                                '&:hover': {
+                                    boxShadow: '0 8px 24px rgba(0, 255, 102, 0.4)',
+                                    animation: 'gradientPulse 2s ease infinite',
+                                },
+                                '&:disabled': {
+                                    opacity: 0.5,
+                                },
+                            }}
                         >
                             Далее
                         </Button>
@@ -173,11 +210,25 @@ const Assessment = () => {
                             onClick={handleSubmit}
                             disabled={!currentAnswer || loading}
                             size="large"
+                            sx={{
+                                background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
+                                backgroundSize: '300% 300%',
+                                color: 'white',
+                                fontWeight: 600,
+                                boxShadow: '0 4px 16px rgba(0, 255, 102, 0.3)',
+                                '&:hover': {
+                                    boxShadow: '0 8px 24px rgba(0, 255, 102, 0.4)',
+                                    animation: 'gradientPulse 2s ease infinite',
+                                },
+                                '&:disabled': {
+                                    opacity: 0.5,
+                                },
+                            }}
                         >
                             {loading ? 'Отправка...' : 'Завершить тест'}
                         </Button>
                     )}
-                </Stack>
+                </Box>
             </Paper>
         </Container>
     );

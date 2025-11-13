@@ -19,10 +19,29 @@ export const submitAssessment = createAsyncThunk(
                 timestamp: new Date().toISOString(),
             };
 
+            // ===== MOCK ПОЛЬЗОВАТЕЛЬ =====
+            if (user?.email === 'user@example.com') {
+                // Имитируем задержку
+                await new Promise((resolve) => setTimeout(resolve, 500));
+
+                const results = calculateResults(answers);
+                return {
+                    ...results,
+                    timestamp: payload.timestamp,
+                    date: payload.timestamp.split('T')[0],
+                };
+            }
+
             // ===== РЕАЛЬНЫЕ ПОЛЬЗОВАТЕЛИ =====
             if (user?.id) {
-                payload.user_id = user.id;
+                // Backend автоматически берет user_id из JWT
                 const data = await api.post('/assessment/submit', payload);
+
+                // Добавляем date если Backend не вернул
+                if (data.timestamp && !data.date) {
+                    data.date = data.timestamp.split('T')[0];
+                }
+
                 return data;
             } else {
                 // Не авторизован - локальные результаты
@@ -31,6 +50,7 @@ export const submitAssessment = createAsyncThunk(
                     local: true,
                     ...results,
                     timestamp: payload.timestamp,
+                    date: payload.timestamp.split('T')[0],
                 };
             }
         } catch (error) {
@@ -54,7 +74,17 @@ export const fetchAssessmentHistory = createAsyncThunk(
 
             // ===== РЕАЛЬНАЯ ЗАГРУЗКА =====
             const data = await api.get('/assessment/history');
-            return data.assessments || [];
+
+            // Backend возвращает { assessments: [...], total: N }
+            const assessments = data.assessments || [];
+
+            // Добавляем date для каждой диагностики если нет
+            return assessments.map(item => {
+                if (item.timestamp && !item.date) {
+                    item.date = item.timestamp.split('T')[0];
+                }
+                return item;
+            });
         } catch (error) {
             return rejectWithValue(error.message);
         }
@@ -71,11 +101,24 @@ export const fetchLatestAssessment = createAsyncThunk(
             // ===== MOCK ДАННЫЕ =====
             if (user?.email === 'user@example.com') {
                 await new Promise((resolve) => setTimeout(resolve, 300));
-                return MOCK_ASSESSMENT_HISTORY[0]; // Последняя диагностика
+                const latest = MOCK_ASSESSMENT_HISTORY[0];
+
+                // Добавляем date если нет
+                if (latest.timestamp && !latest.date) {
+                    latest.date = latest.timestamp.split('T')[0];
+                }
+
+                return latest;
             }
 
             // ===== РЕАЛЬНАЯ ЗАГРУЗКА =====
             const data = await api.get('/assessment/latest');
+
+            // Добавляем date если Backend не вернул
+            if (data.timestamp && !data.date) {
+                data.date = data.timestamp.split('T')[0];
+            }
+
             return data;
         } catch (error) {
             return rejectWithValue(error.message);
@@ -164,12 +207,19 @@ const assessmentSlice = createSlice({
 
         // Обновление данных с backend
         updateAssessmentFromBackend: (state, action) => {
-            state.results = action.payload;
-            state.burnoutLevel = action.payload.burnoutLevel;
-            state.score = action.payload.score;
-            state.emotionalExhaustion = action.payload.emotionalExhaustion;
-            state.depersonalization = action.payload.depersonalization;
-            state.reducedAccomplishment = action.payload.reducedAccomplishment;
+            const payload = action.payload;
+
+            // Добавляем date если нет
+            if (payload.timestamp && !payload.date) {
+                payload.date = payload.timestamp.split('T')[0];
+            }
+
+            state.results = payload;
+            state.burnoutLevel = payload.burnoutLevel;
+            state.score = payload.score;
+            state.emotionalExhaustion = payload.emotionalExhaustion;
+            state.depersonalization = payload.depersonalization;
+            state.reducedAccomplishment = payload.reducedAccomplishment;
             state.synced = true;
         },
 
@@ -185,15 +235,22 @@ const assessmentSlice = createSlice({
                 state.error = null;
             })
             .addCase(submitAssessment.fulfilled, (state, action) => {
+                const payload = action.payload;
+
+                // Преобразуем timestamp в date если нужно
+                if (payload.timestamp && !payload.date) {
+                    payload.date = payload.timestamp.split('T')[0];
+                }
+
                 // ВАЖНО: Сохраняем все результаты в state
-                state.results = action.payload;
-                state.burnoutLevel = action.payload.burnoutLevel;
-                state.score = action.payload.score || 0;
-                state.emotionalExhaustion = action.payload.emotionalExhaustion || 0;
-                state.depersonalization = action.payload.depersonalization || 0;
-                state.reducedAccomplishment = action.payload.reducedAccomplishment || 0;
+                state.results = payload;
+                state.burnoutLevel = payload.burnoutLevel;
+                state.score = payload.score || 0;
+                state.emotionalExhaustion = payload.emotionalExhaustion || 0;
+                state.depersonalization = payload.depersonalization || 0;
+                state.reducedAccomplishment = payload.reducedAccomplishment || 0;
                 state.loading = false;
-                state.synced = action.payload.local ? false : true;
+                state.synced = payload.local ? false : true;
             })
             .addCase(submitAssessment.rejected, (state, action) => {
                 state.error = action.payload;
@@ -205,11 +262,19 @@ const assessmentSlice = createSlice({
                 state.loading = true;
             })
             .addCase(fetchAssessmentHistory.fulfilled, (state, action) => {
-                state.history = action.payload;
+                // Добавляем date для каждой диагностики если нет
+                const assessments = action.payload.map(item => {
+                    if (item.timestamp && !item.date) {
+                        item.date = item.timestamp.split('T')[0];
+                    }
+                    return item;
+                });
+
+                state.history = assessments;
 
                 // Автоматически устанавливаем последнюю диагностику как текущую
-                if (action.payload.length > 0) {
-                    const latest = action.payload[0];
+                if (assessments.length > 0) {
+                    const latest = assessments[0];
                     state.burnoutLevel = latest.burnoutLevel;
                     state.score = latest.score;
                     state.emotionalExhaustion = latest.emotionalExhaustion;
@@ -226,12 +291,19 @@ const assessmentSlice = createSlice({
 
             // fetchLatestAssessment
             .addCase(fetchLatestAssessment.fulfilled, (state, action) => {
-                state.results = action.payload;
-                state.burnoutLevel = action.payload.burnoutLevel;
-                state.score = action.payload.score;
-                state.emotionalExhaustion = action.payload.emotionalExhaustion;
-                state.depersonalization = action.payload.depersonalization;
-                state.reducedAccomplishment = action.payload.reducedAccomplishment;
+                const payload = action.payload;
+
+                // Добавляем date если нет
+                if (payload.timestamp && !payload.date) {
+                    payload.date = payload.timestamp.split('T')[0];
+                }
+
+                state.results = payload;
+                state.burnoutLevel = payload.burnoutLevel;
+                state.score = payload.score;
+                state.emotionalExhaustion = payload.emotionalExhaustion;
+                state.depersonalization = payload.depersonalization;
+                state.reducedAccomplishment = payload.reducedAccomplishment;
                 state.synced = true;
             });
     },

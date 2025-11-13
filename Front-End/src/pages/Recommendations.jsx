@@ -287,20 +287,28 @@ const Recommendations = () => {
                 </Grid>
 
                 {/* Upgrade Alert */}
-                <Paper elevation={3} sx={{ p: 4, backgroundColor: 'primary.light', borderLeft: '5px solid' }}>
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: 4,
+                        backgroundColor: 'transparent',
+                        border: '2px solid #00AA44',
+                        borderRadius: 2,
+                    }}
+                >
                     <Grid container spacing={3} alignItems="center">
                         <Grid item xs={12} md={8}>
-                            <Typography variant="h5" fontWeight="bold" gutterBottom>
+                            <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ color: '#00AA44' }}>
                                 🔓 Больше рекомендаций
                             </Typography>
                             <Typography variant="body1" color="text.secondary" paragraph>
                                 Авторизованные пользователи получают полный набор персональных рекомендаций, адаптированных под их результаты диагностики.
                             </Typography>
-                            <Stack direction="row" spacing={2}>
-                                <Typography variant="body2">✓ Полный список советов</Typography>
-                                <Typography variant="body2">✓ Индивидуальный план</Typography>
-                                <Typography variant="body2">✓ Отслеживание выполнения</Typography>
-                            </Stack>
+                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                                <Typography variant="body2" sx={{ color: '#4B5563' }}>✓ Полный список советов</Typography>
+                                <Typography variant="body2" sx={{ color: '#4B5563' }}>✓ Индивидуальный план</Typography>
+                                <Typography variant="body2" sx={{ color: '#4B5563' }}>✓ Отслеживание выполнения</Typography>
+                            </Box>
                         </Grid>
                         <Grid item xs={12} md={4} sx={{ textAlign: 'center' }}>
                             <Button
@@ -309,6 +317,17 @@ const Recommendations = () => {
                                 startIcon={<LoginIcon />}
                                 onClick={() => navigate('/login')}
                                 fullWidth
+                                sx={{
+                                    background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
+                                    backgroundSize: '300% 300%',
+                                    color: 'white',
+                                    fontWeight: 700,
+                                    boxShadow: '0 4px 16px rgba(0, 255, 102, 0.3)',
+                                    '&:hover': {
+                                        boxShadow: '0 8px 24px rgba(0, 255, 102, 0.4)',
+                                        animation: 'gradientPulse 2s ease infinite',
+                                    },
+                                }}
                             >
                                 Авторизоваться
                             </Button>
