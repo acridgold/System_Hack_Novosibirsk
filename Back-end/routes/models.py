@@ -4,7 +4,7 @@
 
 # Тестовые пользователи
 USERS_DB = {
-    'user@example.com': {
+    'user@example.co': {
         'id': 1,
         'email': 'user@example.com',
         'password': 'password123',

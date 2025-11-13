@@ -1,31 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
-import { MOCK_USER } from '../../utils/mockUser';
 
 // Авторизация пользователя
 export const loginUser = createAsyncThunk(
     'user/login',
     async (credentials, { rejectWithValue, dispatch }) => {
         try {
-            // ===== ПРОВЕРКА MOCK ПОЛЬЗОВАТЕЛЯ =====
-            if (
-                credentials.email === 'user@example.com' &&
-                credentials.password === 'password123'
-            ) {
-                // Имитируем задержку сети
-                await new Promise((resolve) => setTimeout(resolve, 800));
-
-                // Сохраняем токен
-                localStorage.setItem('token', 'mock-token-12345');
-
-                // Возвращаем mock пользователя
-                return {
-                    token: 'mock-token-12345',
-                    user: MOCK_USER,
-                };
-            }
-
-            // ===== РЕАЛЬНАЯ АВТОРИЗАЦИЯ =====
+            // ===== ОТПРАВЛЯЕМ РЕАЛЬНЫЙ ЗАПРОС НА БЭКЕНД =====
             const formData = new URLSearchParams();
             formData.append('username', credentials.email);
             formData.append('password', credentials.password);
@@ -64,11 +45,6 @@ export const checkAuth = createAsyncThunk(
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No token');
-
-            // ===== ПРОВЕРКА MOCK ТОКЕНА =====
-            if (token === 'mock-token-12345') {
-                return MOCK_USER;
-            }
 
             // ===== РЕАЛЬНАЯ ПРОВЕРКА =====
             const data = await api.get('/auth/verify');

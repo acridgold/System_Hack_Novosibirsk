@@ -19,18 +19,6 @@ export const submitAssessment = createAsyncThunk(
                 timestamp: new Date().toISOString(),
             };
 
-            // ===== MOCK ПОЛЬЗОВАТЕЛЬ =====
-            if (user?.email === 'user@example.com') {
-                // Имитируем задержку
-                await new Promise((resolve) => setTimeout(resolve, 500));
-
-                const results = calculateResults(answers);
-                return {
-                    ...results,
-                    timestamp: payload.timestamp,
-                };
-            }
-
             // ===== РЕАЛЬНЫЕ ПОЛЬЗОВАТЕЛИ =====
             if (user?.id) {
                 payload.user_id = user.id;

@@ -30,11 +30,11 @@ def login():
         user = USERS_DB.get(username)
 
         if not user or user['password'] != password:
-            auth_logger.warning(f"Неверные учетные данные для пользователя: {username}")
+            auth_logger.warning(f"Неверные учетные данные для пользователя: {username} {password}")
             return jsonify({'detail': 'Invalid email or password'}), 401
 
         # Создаем JWT токен
-        access_token = create_access_token(identity=user['id'])
+        access_token = create_access_token(identity=str(user['id']))
 
         auth_logger.info(f"Пользователь {username} (ID: {user['id']}) успешно авторизован")
 
@@ -57,6 +57,7 @@ def login():
 @auth_bp.route('/verify', methods=['GET'])
 @jwt_required()
 def verify_token():
+    auth_logger.info("Запрос проверки валидности токена")
     """
     Проверка валидности токена
     GET /auth/verify
@@ -64,10 +65,11 @@ def verify_token():
     """
     try:
         user_id = get_jwt_identity()
+        user_id_int = int(user_id)  # Преобразуем строку в число
 
         # Ищем пользователя по ID
         for email, user in USERS_DB.items():
-            if user['id'] == user_id:
+            if user['id'] == user_id_int:
                 return jsonify({
                     'valid': True,
                     'user_id': user_id,
@@ -92,13 +94,17 @@ def get_current_user():
     Header: Authorization: Bearer {token}
     """
     try:
+        # Логируем заголовки для отладки
+        auth_logger.info(f"Запрос текущего пользователя. Headers: {dict(request.headers)}")
+
         user_id = get_jwt_identity()
         auth_logger.info(f"Запрос данных пользователя ID: {user_id}")
 
         # Ищем пользователя по ID
-        for email, user in USERS_DB.items():
-            if user['id'] == user_id:
-                auth_logger.info(f"Данные пользователя получены: {email}")
+        user_id_int = int(user_id)  # Преобразуем строку в число
+        for user in USERS_DB.values():
+            if user['id'] == user_id_int:
+                auth_logger.info(f"Данные пользователя получены: {user['email']}")
                 return jsonify({
                     'id': user['id'],
                     'email': user['email'],

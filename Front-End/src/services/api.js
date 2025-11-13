@@ -58,6 +58,8 @@ class ApiService {
         const queryString = new URLSearchParams(params).toString();
         const url = queryString ? `${endpoint}?${queryString}` : endpoint;
 
+        // Отправляем GET без дополнительных заголовков в options
+        // request() сам добавит getAuthHeaders()
         return this.request(url, {
             method: 'GET',
         });
