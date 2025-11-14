@@ -16,7 +16,7 @@ const ProfessionalGoalsQuestion = ({ question, currentAnswer, onAnswer }) => {
     // Генерация путей к кадрам анимации
     const frameCount = 9;
     const frames = Array.from({ length: frameCount }, (_, i) => 
-        `/animations/ProfessionalGoalsQuestion/${(i+1).toString().padStart(4, '0')}.png`
+        `/questionsAssets/ProfessionalGoalsQuestion/${(i+1).toString().padStart(4, '0')}.png`
     );
 
     // Преобразование значения 1-5 в кадр анимации 0-63

@@ -15,12 +15,12 @@ import { ArrowBack, ArrowForward, CheckCircle, Warning } from '@mui/icons-materi
 import { setAnswer, submitAssessment } from '../store/slices/assessmentSlice';
 import { ASSESSMENT_QUESTIONS } from '../utils/constants';
 
-const EmotionalExhaustionQuestion = lazy(() => import('../components/assessment/questions/EmotionalExhaustionQuestion'));
+const WorkLifeBalanceQuestion = lazy(() => import('../components/assessment/questions/WorkLifeBalanceQuestion'));
 const ProfessionalGoalsQuestion = lazy(() => import('../components/assessment/questions/ProfessionalGoalsQuestion'));
 
 const COMPONENT_MAP = {
     ProfessionalGoalsQuestion,
-    EmotionalExhaustionQuestion,
+    WorkLifeBalanceQuestion,
 };
 
 const Assessment = () => {
@@ -114,7 +114,7 @@ const Assessment = () => {
                     <Box display="flex" justifyContent="center" alignItems="center" height="400px">
                         <CircularProgress />
                     </Box>
-                }>
+                    }>
                     {QuestionComponent && (
                         <QuestionComponent
                             question={question}
@@ -123,6 +123,8 @@ const Assessment = () => {
                         />
                     )}
                 </Suspense>
+
+                <Box sx={{ mb: 4 }} />
 
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between' }}>
                     <Button
@@ -148,7 +150,6 @@ const Assessment = () => {
                             variant="contained"
                             endIcon={<ArrowForward />}
                             onClick={handleNext}
-                            disabled={!currentAnswer}
                             size="large"
                             sx={{
                                 background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',

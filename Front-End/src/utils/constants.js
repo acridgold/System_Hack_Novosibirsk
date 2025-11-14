@@ -2,15 +2,16 @@
 export const ASSESSMENT_QUESTIONS = [
     {
         id: 0,
-        text: 'Оцените свое стремление к профессиональным достижениям',
+        text: 'Оцените Ваше стремление к профессиональным достижениям',
         category: 'emotional_exhaustion',
         component: 'ProfessionalGoalsQuestion'
     },
     {
         id: 1,
-        text: 'Насколько цинично вы относитесь к своей работе?',
-        subtitle: 'Ощущаете ли вы равнодушие к результатам работы?',
+        text: 'Оцените Ваш баланс между работой и жизнью',
+        subtitle: 'Для этого перемещайте чаши весов',
         category: 'depersonalization',
+        component: 'WorkLifeBalanceQuestion'
     },
     {
         id: 2,
