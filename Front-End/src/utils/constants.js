@@ -15,9 +15,10 @@ export const ASSESSMENT_QUESTIONS = [
     },
     {
         id: 2,
-        text: 'Ощущаете ли вы снижение личной продуктивности?',
-        subtitle: 'Чувствуете ли вы, что работаете менее эффективно?',
+        text: 'Стремитесь ли Вы к совершенству?',
+        subtitle: 'Покажите, каким результатом работы вы были бы довольны',
         category: 'reduced_accomplishment',
+        component: 'PerfectWorkQuestion'
     },
     {
         id: 3,

@@ -17,9 +17,11 @@ import { ASSESSMENT_QUESTIONS } from '../utils/constants';
 
 const WorkLifeBalanceQuestion = lazy(() => import('../components/assessment/questions/WorkLifeBalanceQuestion'));
 const ProfessionalGoalsQuestion = lazy(() => import('../components/assessment/questions/ProfessionalGoalsQuestion'));
+const PerfectWorkQuestion = lazy(() => import('../components/assessment/questions/PerfectWorkQuestion'));
 
 const COMPONENT_MAP = {
     ProfessionalGoalsQuestion,
+    PerfectWorkQuestion,
     WorkLifeBalanceQuestion,
 };
 
