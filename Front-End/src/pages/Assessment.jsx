@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -9,10 +9,17 @@ import {
     Box,
     LinearProgress,
     Alert,
+    CircularProgress,
 } from '@mui/material';
 import { ArrowBack, ArrowForward, CheckCircle, Warning } from '@mui/icons-material';
 import { setAnswer, submitAssessment } from '../store/slices/assessmentSlice';
 import { ASSESSMENT_QUESTIONS } from '../utils/constants';
+
+const EmotionalExhaustionQuestion = lazy(() => import('../components/assessment/questions/EmotionalExhaustionQuestion'));
+
+const COMPONENT_MAP = {
+    EmotionalExhaustionQuestion,
+};
 
 const Assessment = () => {
     const navigate = useNavigate();
@@ -58,13 +65,7 @@ const Assessment = () => {
     const question = ASSESSMENT_QUESTIONS[currentQuestion];
     const currentAnswer = answers[currentQuestion];
 
-    const options = [
-        { value: 1, label: 'Никогда', color: '#00dd55' },
-        { value: 2, label: 'Редко', color: '#00DD55' },
-        { value: 3, label: 'Иногда', color: '#00dd55' },
-        { value: 4, label: 'Часто', color: '#00dd55' },
-        { value: 5, label: 'Всегда', color: '#00dd55' },
-    ];
+    const QuestionComponent = COMPONENT_MAP[question.component];
 
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
@@ -107,58 +108,19 @@ const Assessment = () => {
                     )}
                 </Paper>
 
-                <Box sx={{ mb: 4 }}>
-                    {options.map((option) => (
-                        <Paper
-                            key={option.value}
-                            elevation={currentAnswer === option.value ? 8 : 0}
-                            sx={{
-                                p: 2.5,
-                                mb: 2,
-                                cursor: 'pointer',
-                                border: currentAnswer === option.value ? `3px solid ${option.color}` : '2px solid #E0EFE5',
-                                backgroundColor: currentAnswer === option.value ? `${option.color}15` : 'white',
-                                transition: 'all 0.3s ease',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                '&:hover': {
-                                    backgroundColor: `${option.color}25`,
-                                    boxShadow: `0 4px 16px ${option.color}40`,
-                                    transform: 'translateY(-2px)',
-                                },
-                            }}
-                            onClick={() => handleAnswer(option.value)}
-                        >
-                            <Typography
-                                variant="h6"
-                                fontWeight={currentAnswer === option.value ? 'bold' : '500'}
-                                sx={{
-                                    color: currentAnswer === option.value ? option.color : 'text.primary',
-                                    transition: 'color 0.3s',
-                                }}
-                            >
-                                {option.label}
-                            </Typography>
-                            <Box
-                                sx={{
-                                    backgroundColor: currentAnswer === option.value ? option.color : 'grey.300',
-                                    color: 'white',
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontWeight: 'bold',
-                                    transition: 'all 0.3s',
-                                }}
-                            >
-                                {option.value}
-                            </Box>
-                        </Paper>
-                    ))}
-                </Box>
+                <Suspense fallback={
+                    <Box display="flex" justifyContent="center" alignItems="center" height="400px">
+                        <CircularProgress />
+                    </Box>
+                }>
+                    {QuestionComponent && (
+                        <QuestionComponent
+                            question={question}
+                            currentAnswer={currentAnswer}
+                            onAnswer={handleAnswer}
+                        />
+                    )}
+                </Suspense>
 
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between' }}>
                     <Button

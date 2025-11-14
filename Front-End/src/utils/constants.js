@@ -5,6 +5,7 @@ export const ASSESSMENT_QUESTIONS = [
         text: 'Как часто вы чувствуете эмоциональное истощение на работе?',
         subtitle: 'Оцените по шкале от 1 (никогда) до 5 (всегда)',
         category: 'emotional_exhaustion',
+        component: 'EmotionalExhaustionQuestion'
     },
     {
         id: 1,
