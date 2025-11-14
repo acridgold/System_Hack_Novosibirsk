@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from .models import USERS_DB
+from .db_models import User
+from database import db
 from datetime import datetime
 
 from .logger import auth_logger
@@ -39,7 +40,8 @@ def register():
         department = data.get('department')
 
         # Проверка, что пользователь еще не зарегистрирован
-        if email in USERS_DB:
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
             auth_logger.warning(f"Попытка регистрации с существующим email: {email}")
             return jsonify({'detail': 'Email already registered'}), 409
 
@@ -48,48 +50,34 @@ def register():
             auth_logger.warning(f"Попытка регистрации с коротким паролем для {email}")
             return jsonify({'detail': 'Password must be at least 6 characters'}), 400
 
-        # Генерируем новый ID (наибольший ID + 1)
-        max_id = max([user['id'] for user in USERS_DB.values()], default=0)
-        new_user_id = max_id + 1
-
         # Создаем нового пользователя
-        new_user = {
-            'id': new_user_id,
-            'email': email,
-            'password': password,  # В реальном приложении нужно хешировать пароль!
-            'name': name,
-            'position': position,
-            'department': department,
-            'joinDate': datetime.now().strftime('%Y-%m-%d'),
-            'daysInSystem': 0,
-            'completedRecommendations': 0,
-            'avatar': None,
-        }
+        new_user = User(
+            email=email,
+            password=password,  # В реальном приложении нужно хешировать пароль!
+            name=name,
+            position=position,
+            department=department,
+            days_in_system=0,
+            completed_recommendations=0
+        )
 
         # Сохраняем пользователя в БД
-        USERS_DB[email] = new_user
+        db.session.add(new_user)
+        db.session.commit()
 
-        auth_logger.info(f"Новый пользователь зарегистрирован: {email} (ID: {new_user_id})")
+        auth_logger.info(f"Новый пользователь зарегистрирован: {email} (ID: {new_user.id})")
 
         # Создаем JWT токен
-        access_token = create_access_token(identity=str(new_user_id))
+        access_token = create_access_token(identity=str(new_user.id))
 
         return jsonify({
             'access_token': access_token,
             'token_type': 'bearer',
-            'user': {
-                'id': new_user['id'],
-                'email': new_user['email'],
-                'name': new_user['name'],
-                'position': new_user['position'],
-                'department': new_user['department'],
-                'joinDate': new_user['joinDate'],
-                'daysInSystem': new_user['daysInSystem'],
-                'completedRecommendations': new_user['completedRecommendations'],
-            }
+            'user': new_user.to_dict()
         }), 201
 
     except Exception as e:
+        db.session.rollback()
         auth_logger.error(f"Ошибка при регистрации: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
 
@@ -99,13 +87,19 @@ def login():
     Авторизация пользователя
     POST /auth/token
 
-    Формат: application/x-www-form-urlencoded
+    Формат: application/x-www-form-urlencoded или application/json
     - username: email пользователя
     - password: пароль
     """
     try:
-        username = request.form.get('username')
-        password = request.form.get('password')
+        # Поддерживаем оба формата: form-data и JSON
+        if request.is_json:
+            data = request.get_json()
+            username = data.get('username') or data.get('email')
+            password = data.get('password')
+        else:
+            username = request.form.get('username') or request.form.get('email')
+            password = request.form.get('password')
 
         auth_logger.info(f"Попытка входа для пользователя: {username}")
 
@@ -113,28 +107,22 @@ def login():
             auth_logger.warning(f"Ошибка входа: отсутствуют учетные данные для {username}")
             return jsonify({'detail': 'Email and password are required'}), 400
 
-        # Ищем пользователя
-        user = USERS_DB.get(username)
+        # Ищем пользователя в БД
+        user = User.query.filter_by(email=username.lower().strip()).first()
 
-        if not user or user['password'] != password:
-            auth_logger.warning(f"Неверные учетные данные для пользователя: {username} {password}")
+        if not user or user.password != password:
+            auth_logger.warning(f"Неверные учетные данные для пользователя: {username}")
             return jsonify({'detail': 'Invalid email or password'}), 401
 
         # Создаем JWT токен
-        access_token = create_access_token(identity=str(user['id']))
+        access_token = create_access_token(identity=str(user.id))
 
-        auth_logger.info(f"Пользователь {username} (ID: {user['id']}) успешно авторизован")
+        auth_logger.info(f"Пользователь {username} (ID: {user.id}) успешно авторизован")
 
         return jsonify({
             'access_token': access_token,
             'token_type': 'bearer',
-            'user': {
-                'id': user['id'],
-                'email': user['email'],
-                'name': user['name'],
-                'position': user['position'],
-                'department': user['department'],
-            }
+            'user': user.to_dict()
         }), 200
 
     except Exception as e:
@@ -144,32 +132,31 @@ def login():
 @auth_bp.route('/verify', methods=['GET'])
 @jwt_required()
 def verify_token():
-    auth_logger.info("Запрос проверки валидности токена")
     """
     Проверка валидности токена
     GET /auth/verify
     Header: Authorization: Bearer {token}
     """
     try:
+        auth_logger.info("Запрос проверки валидности токена")
         user_id = get_jwt_identity()
-        user_id_int = int(user_id)  # Преобразуем строку в число
+        user_id_int = int(user_id)
 
         # Ищем пользователя по ID
-        for email, user in USERS_DB.items():
-            if user['id'] == user_id_int:
-                return jsonify({
-                    'valid': True,
-                    'user_id': user_id,
-                    'user': {
-                        'id': user['id'],
-                        'email': user['email'],
-                        'name': user['name'],
-                    }
-                }), 200
+        user = User.query.get(user_id_int)
 
-        return jsonify({'detail': 'User not found'}), 404
+        if not user:
+            auth_logger.warning(f"Пользователь не найден по ID: {user_id}")
+            return jsonify({'detail': 'User not found'}), 404
+
+        return jsonify({
+            'valid': True,
+            'user_id': user_id,
+            'user': user.to_dict()
+        }), 200
 
     except Exception as e:
+        auth_logger.error(f"Ошибка при проверке токена: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
 
 @auth_bp.route('/me', methods=['GET'])
@@ -181,31 +168,21 @@ def get_current_user():
     Header: Authorization: Bearer {token}
     """
     try:
-        # Логируем заголовки для отладки
-        auth_logger.info(f"Запрос текущего пользователя. Headers: {dict(request.headers)}")
-
+        auth_logger.info(f"Запрос текущего пользователя")
         user_id = get_jwt_identity()
-        auth_logger.info(f"Запрос данных пользователя ID: {user_id}")
+        user_id_int = int(user_id)
+
+        auth_logger.info(f"Запрос данных пользователя ID: {user_id_int}")
 
         # Ищем пользователя по ID
-        user_id_int = int(user_id)  # Преобразуем строку в число
-        for user in USERS_DB.values():
-            if user['id'] == user_id_int:
-                auth_logger.info(f"Данные пользователя получены: {user['email']}")
-                return jsonify({
-                    'id': user['id'],
-                    'email': user['email'],
-                    'name': user['name'],
-                    'position': user['position'],
-                    'department': user['department'],
-                    'joinDate': user['joinDate'],
-                    'daysInSystem': user['daysInSystem'],
-                    'completedRecommendations': user['completedRecommendations'],
-                    'avatar': user['avatar'],
-                }), 200
+        user = User.query.get(user_id_int)
 
-        auth_logger.warning(f"Пользователь не найден по ID: {user_id}")
-        return jsonify({'detail': 'User not found'}), 404
+        if not user:
+            auth_logger.warning(f"Пользователь не найден по ID: {user_id}")
+            return jsonify({'detail': 'User not found'}), 404
+
+        auth_logger.info(f"Данные пользователя получены: {user.email}")
+        return jsonify(user.to_dict()), 200
 
     except Exception as e:
         auth_logger.error(f"Ошибка при получении данных пользователя: {str(e)}", exc_info=True)

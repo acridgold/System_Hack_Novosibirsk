@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from .models import METRICS_DB, ASSESSMENTS_DB
+from .db_models import Metric, Assessment, User
+from database import db
 
 # Импортируем логгер
 from .logger import dashboard_logger
@@ -16,17 +17,24 @@ def get_metrics():
     Header: Authorization: Bearer {token}
     """
     try:
-        user_id = get_jwt_identity()
+        user_id_str = get_jwt_identity()
+        user_id = int(user_id_str)
 
-        metrics = METRICS_DB.get(user_id, [])
+        dashboard_logger.info(f"Запрос метрик для пользователя ID: {user_id}")
+
+        # Получаем все метрики пользователя
+        metrics = Metric.query.filter_by(user_id=user_id).all()
+
+        dashboard_logger.info(f"Найдено {len(metrics)} метрик для пользователя ID: {user_id}")
 
         return jsonify({
-            'metrics': metrics,
+            'metrics': [m.to_dict() for m in metrics],
             'period': 'week',
             'total': len(metrics),
         }), 200
 
     except Exception as e:
+        dashboard_logger.error(f"Ошибка при получении метрик: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
 
 @dashboard_bp.route('/summary', methods=['GET'])
@@ -38,33 +46,37 @@ def get_summary():
     Header: Authorization: Bearer {token}
     """
     try:
-        user_id = get_jwt_identity()
+        user_id_str = get_jwt_identity()
+        user_id = int(user_id_str)
 
         dashboard_logger.info(f"Запрос сводки дашборда для пользователя ID: {user_id}")
 
+        # Проверяем, что пользователь существует
+        user = User.query.get(user_id)
+        if not user:
+            dashboard_logger.warning(f"Пользователь ID: {user_id} не найден")
+            return jsonify({'detail': 'User not found'}), 404
+
         # Получаем последнюю диагностику
-        assessments = ASSESSMENTS_DB.get(user_id, [])
-        latest_assessment = assessments[0] if assessments else None
+        latest_assessment = Assessment.query.filter_by(user_id=user_id).order_by(
+            Assessment.date.desc()
+        ).first()
+
+        # Получаем все диагностики (для подсчета)
+        all_assessments = Assessment.query.filter_by(user_id=user_id).all()
 
         # Получаем метрики
-        metrics = METRICS_DB.get(user_id, [])
+        metrics = Metric.query.filter_by(user_id=user_id).all()
 
         summary = {
             'latestAssessment': None,
-            'metrics': metrics,
-            'totalAssessments': len(assessments),
+            'metrics': [m.to_dict() for m in metrics],
+            'totalAssessments': len(all_assessments),
         }
 
         if latest_assessment:
-            summary['latestAssessment'] = {
-                'date': latest_assessment['date'],
-                'burnoutLevel': latest_assessment['burnoutLevel'],
-                'score': latest_assessment['score'],
-                'emotionalExhaustion': latest_assessment['emotionalExhaustion'],
-                'depersonalization': latest_assessment['depersonalization'],
-                'reducedAccomplishment': latest_assessment['reducedAccomplishment'],
-            }
-            dashboard_logger.info(f"Последняя диагностика для пользователя ID: {user_id} - уровень: {latest_assessment['burnoutLevel']}, балл: {latest_assessment['score']}")
+            summary['latestAssessment'] = latest_assessment.to_dict()
+            dashboard_logger.info(f"Последняя диагностика для пользователя ID: {user_id} - уровень: {latest_assessment.burnout_level}, балл: {latest_assessment.score}")
         else:
             dashboard_logger.info(f"Нет диагностик для пользователя ID: {user_id}")
 

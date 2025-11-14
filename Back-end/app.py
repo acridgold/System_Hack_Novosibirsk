@@ -4,6 +4,8 @@ from flask_jwt_extended import JWTManager
 import os
 
 from logger import app_logger
+from config import get_config
+from database import init_db, db
 
 app_logger.info("=" * 50)
 app_logger.info("Запуск приложения Flask")
@@ -12,12 +14,16 @@ app_logger.info("=" * 50)
 # Инициализируем приложение Flask
 app = Flask(__name__)
 
-# Конфигурация
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 86400))
+# Загружаем конфигурацию
+config = get_config()
+app.config.from_object(config)
 
-app_logger.info(f"Конфигурация загружена. JWT_ACCESS_TOKEN_EXPIRES: {app.config['JWT_ACCESS_TOKEN_EXPIRES']} секунд")
+app_logger.info(f"Конфигурация загружена: {config.__name__}")
+app_logger.info(f"БД: {app.config['SQLALCHEMY_DATABASE_URI']}")
+
+# Инициализируем БД
+init_db(app)
+app_logger.info("SQLAlchemy инициализирована")
 
 # Инициализируем CORS
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -26,6 +32,9 @@ app_logger.info("CORS инициализирован")
 # Инициализируем JWT
 jwt = JWTManager(app)
 app_logger.info("JWT инициализирован")
+
+# Импортируем ORM модели
+from routes.db_models import User, Assessment, Recommendation, Metric, OldUser
 
 # Импортируем blueprints с роутами
 from routes.auth import auth_bp

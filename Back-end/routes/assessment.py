@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
-from .models import ASSESSMENTS_DB, ASSESSMENT_QUESTIONS
+from .db_models import Assessment, User
+from database import db
+from .models import ASSESSMENT_QUESTIONS
 
 # Импортируем логгер
 from logger import assessment_logger
@@ -12,11 +14,6 @@ def calculate_burnout_scores(answers):
     """
     Рассчитывает показатели выгорания на основе ответов
     Использует шкалу Maslach Burnout Inventory (MBI)
-
-    Структура:
-    - Emotional Exhaustion (вопросы 0-8): диапазон 0-54
-    - Depersonalization (вопросы 9-13): диапазон 0-30
-    - Reduced Accomplishment (вопросы 14-19): диапазон 0-36
     """
     # Эмоциональное истощение (9 вопросов)
     ee_questions = [0, 1, 2, 3, 4, 5, 6, 7, 8]
@@ -61,6 +58,7 @@ def get_questions():
             'total': len(ASSESSMENT_QUESTIONS),
         }), 200
     except Exception as e:
+        assessment_logger.error(f"Ошибка при получении вопросов: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
 
 @assessment_bp.route('/submit', methods=['POST'])
@@ -81,7 +79,8 @@ def submit_assessment():
     }
     """
     try:
-        user_id = get_jwt_identity()
+        user_id_str = get_jwt_identity()
+        user_id = int(user_id_str)
         data = request.get_json()
 
         assessment_logger.info(f"Получена диагностика от пользователя ID: {user_id}")
@@ -97,49 +96,37 @@ def submit_assessment():
             assessment_logger.warning(f"Неполные ответы от пользователя ID: {user_id}. Получено: {len(answers)}, ожидается: {len(ASSESSMENT_QUESTIONS)}")
             return jsonify({'detail': f'Expected {len(ASSESSMENT_QUESTIONS)} answers'}), 400
 
+        # Проверяем, что пользователь существует
+        user = User.query.get(user_id)
+        if not user:
+            assessment_logger.warning(f"Пользователь ID: {user_id} не найден")
+            return jsonify({'detail': 'User not found'}), 404
+
         # Рассчитываем показатели выгорания
         scores = calculate_burnout_scores(answers)
 
         assessment_logger.info(f"Диагностика обработана для пользователя ID: {user_id}. Уровень выгорания: {scores['burnoutLevel']}, Балл: {scores['score']}")
 
-        # Создаем новую запись о диагностике
-        assessments = ASSESSMENTS_DB.get(user_id, [])
+        # Создаем новую диагностику в БД
+        new_assessment = Assessment(
+            user_id=user_id,
+            burnout_level=scores['burnoutLevel'],
+            score=scores['score'],
+            emotional_exhaustion=scores['emotionalExhaustion'],
+            depersonalization=scores['depersonalization'],
+            reduced_accomplishment=scores['reducedAccomplishment'],
+            answers=answers
+        )
 
-        new_assessment_id = max([a['id'] for a in assessments], default=0) + 1
+        db.session.add(new_assessment)
+        db.session.commit()
 
-        now = datetime.utcnow()
-        new_assessment = {
-            'id': new_assessment_id,
-            'userId': user_id,
-            'date': now.strftime('%Y-%m-%d'),
-            'timestamp': now.isoformat() + 'Z',
-            'burnoutLevel': scores['burnoutLevel'],
-            'score': scores['score'],
-            'emotionalExhaustion': scores['emotionalExhaustion'],
-            'depersonalization': scores['depersonalization'],
-            'reducedAccomplishment': scores['reducedAccomplishment'],
-            'answers': answers,
-        }
+        assessment_logger.info(f"Диагностика сохранена. ID диагностики: {new_assessment.id}")
 
-        # Сохраняем в БД
-        if user_id not in ASSESSMENTS_DB:
-            ASSESSMENTS_DB[user_id] = []
-
-        ASSESSMENTS_DB[user_id].insert(0, new_assessment)  # Добавляем в начало для актуальности
-
-        assessment_logger.info(f"Диагностика сохранена. ID диагностики: {new_assessment['id']}")
-
-        return jsonify({
-            'id': new_assessment['id'],
-            'burnoutLevel': new_assessment['burnoutLevel'],
-            'score': new_assessment['score'],
-            'emotionalExhaustion': new_assessment['emotionalExhaustion'],
-            'depersonalization': new_assessment['depersonalization'],
-            'reducedAccomplishment': new_assessment['reducedAccomplishment'],
-            'timestamp': new_assessment['timestamp'],
-        }), 201
+        return jsonify(new_assessment.to_dict()), 201
 
     except Exception as e:
+        db.session.rollback()
         assessment_logger.error(f"Ошибка при сохранении диагностики: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
 
@@ -152,16 +139,25 @@ def get_assessment_history():
     Header: Authorization: Bearer {token}
     """
     try:
-        user_id = get_jwt_identity()
+        user_id_str = get_jwt_identity()
+        user_id = int(user_id_str)
 
-        assessments = ASSESSMENTS_DB.get(user_id, [])
+        assessment_logger.info(f"Запрос истории диагностик для пользователя ID: {user_id}")
+
+        # Получаем все диагностики пользователя, отсортированные по дате (новые в начале)
+        assessments = Assessment.query.filter_by(user_id=user_id).order_by(
+            Assessment.date.desc()
+        ).all()
+
+        assessment_logger.info(f"Найдено {len(assessments)} диагностик для пользователя ID: {user_id}")
 
         return jsonify({
-            'assessments': assessments,
+            'assessments': [a.to_dict() for a in assessments],
             'total': len(assessments),
         }), 200
 
     except Exception as e:
+        assessment_logger.error(f"Ошибка при получении истории: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
 
 @assessment_bp.route('/<int:assessment_id>', methods=['GET'])
@@ -173,19 +169,23 @@ def get_assessment(assessment_id):
     Header: Authorization: Bearer {token}
     """
     try:
-        user_id = get_jwt_identity()
+        user_id_str = get_jwt_identity()
+        user_id = int(user_id_str)
 
         assessment_logger.info(f"Запрос деталей диагностики ID: {assessment_id} для пользователя ID: {user_id}")
 
-        assessments = ASSESSMENTS_DB.get(user_id, [])
+        # Получаем диагностику, проверяя что она принадлежит пользователю
+        assessment = Assessment.query.filter_by(
+            id=assessment_id,
+            user_id=user_id
+        ).first()
 
-        for assessment in assessments:
-            if assessment['id'] == assessment_id:
-                assessment_logger.info(f"Диагностика ID: {assessment_id} найдена")
-                return jsonify(assessment), 200
+        if not assessment:
+            assessment_logger.warning(f"Диагностика ID: {assessment_id} не найдена для пользователя ID: {user_id}")
+            return jsonify({'detail': 'Assessment not found'}), 404
 
-        assessment_logger.warning(f"Диагностика ID: {assessment_id} не найдена для пользователя ID: {user_id}")
-        return jsonify({'detail': 'Assessment not found'}), 404
+        assessment_logger.info(f"Диагностика ID: {assessment_id} найдена")
+        return jsonify(assessment.to_dict()), 200
 
     except Exception as e:
         assessment_logger.error(f"Ошибка при получении диагностики: {str(e)}", exc_info=True)
