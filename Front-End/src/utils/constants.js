@@ -2,10 +2,9 @@
 export const ASSESSMENT_QUESTIONS = [
     {
         id: 0,
-        text: 'Как часто вы чувствуете эмоциональное истощение на работе?',
-        subtitle: 'Оцените по шкале от 1 (никогда) до 5 (всегда)',
+        text: 'Оцените свое стремление к профессиональным достижениям',
         category: 'emotional_exhaustion',
-        component: 'EmotionalExhaustionQuestion'
+        component: 'ProfessionalGoalsQuestion'
     },
     {
         id: 1,

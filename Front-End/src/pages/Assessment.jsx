@@ -16,8 +16,10 @@ import { setAnswer, submitAssessment } from '../store/slices/assessmentSlice';
 import { ASSESSMENT_QUESTIONS } from '../utils/constants';
 
 const EmotionalExhaustionQuestion = lazy(() => import('../components/assessment/questions/EmotionalExhaustionQuestion'));
+const ProfessionalGoalsQuestion = lazy(() => import('../components/assessment/questions/ProfessionalGoalsQuestion'));
 
 const COMPONENT_MAP = {
+    ProfessionalGoalsQuestion,
     EmotionalExhaustionQuestion,
 };
 
