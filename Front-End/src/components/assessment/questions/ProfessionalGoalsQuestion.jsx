@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 
 const ProfessionalGoalsQuestion = ({ question, currentAnswer, onAnswer }) => {
-    const [localValue, setLocalValue] = useState(currentAnswer || 1);
+    const [localValue, setLocalValue] = useState(currentAnswer || 0);
     const [isLoading, setIsLoading] = useState(true);
     const [loadedFrames, setLoadedFrames] = useState({});
 
@@ -19,9 +19,9 @@ const ProfessionalGoalsQuestion = ({ question, currentAnswer, onAnswer }) => {
         `/questionsAssets/ProfessionalGoalsQuestion/${(i+1).toString().padStart(4, '0')}.png`
     );
 
-    // Преобразование значения 1-5 в кадр анимации 0-63
+    // Преобразование значения 0-1 в кадр анимации 0-8
     const valueToFrame = (value) => {
-        return Math.min(Math.floor(((value - 1) / 4) * frameCount), frameCount - 1);
+        return Math.min(Math.floor(value * frameCount), frameCount - 1);
     };
 
     const currentFrame = valueToFrame(localValue);
@@ -60,28 +60,36 @@ const ProfessionalGoalsQuestion = ({ question, currentAnswer, onAnswer }) => {
 
     // Функция для получения цвета (инвертированная интерполяция)
     const getColor = (value) => {
-        const baseValue = Math.floor(value);
-        const progress = value - baseValue;
-        
         // Инвертированная цветовая схема: от красного к зеленому
         const colors = {
-            1: '#F44336', // Красный - высокий уровень выгорания
-            2: '#FF9800', // Оранжевый
-            3: '#FFC107', // Желтый
-            4: '#8BC34A', // Светло-зеленый
-            5: '#4CAF50', // Зеленый - низкий уровень выгорания
+            0: '#F44336', // Красный - высокий уровень выгорания
+            0.25: '#FF9800', // Оранжевый
+            0.5: '#FFC107', // Желтый
+            0.75: '#8BC34A', // Светло-зеленый
+            1: '#4CAF50', // Зеленый - низкий уровень выгорания
         };
 
-        // Если значение целое, возвращаем соответствующий цвет
-        if (progress === 0) {
-            return colors[value];
+        // Находим ближайшие ключи для интерполяции
+        const keys = Object.keys(colors).map(Number).sort((a, b) => a - b);
+        let lowerKey = keys[0];
+        let upperKey = keys[keys.length - 1];
+
+        for (let i = 0; i < keys.length - 1; i++) {
+            if (value >= keys[i] && value <= keys[i + 1]) {
+                lowerKey = keys[i];
+                upperKey = keys[i + 1];
+                break;
+            }
         }
 
-        // Инвертированная интерполяция между цветами
-        const currentColor = colors[baseValue];
-        const nextColor = colors[baseValue + 1] || currentColor;
+        // Если значение совпадает с ключом, возвращаем соответствующий цвет
+        if (value === lowerKey) {
+            return colors[lowerKey];
+        }
 
-        return interpolateColor(currentColor, nextColor, progress);
+        // Интерполяция между цветами
+        const progress = (value - lowerKey) / (upperKey - lowerKey);
+        return interpolateColor(colors[lowerKey], colors[upperKey], progress);
     };
 
     // Функция для интерполяции цветов
@@ -166,9 +174,9 @@ const ProfessionalGoalsQuestion = ({ question, currentAnswer, onAnswer }) => {
                         <Slider
                             value={localValue}
                             onChange={handleSliderChange}
-                            min={1}
-                            max={5}
-                            step={0.1}
+                            min={0}
+                            max={1}
+                            step={0.01}
                             orientation="vertical"
                             sx={{
                                 color: currentColor,

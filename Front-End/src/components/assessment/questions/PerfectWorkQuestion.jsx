@@ -12,9 +12,9 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
     const [checkedTasks, setCheckedTasks] = useState(Array(5).fill(false));
     const totalTasks = 5;
 
-    // Преобразование количества отмеченных галочек в значение 0-5
+    // Преобразование количества отмеченных галочек в значение 0-1
     const checkedCountToValue = (checkedCount) => {
-        return (checkedCount / totalTasks) * 5;
+        return checkedCount / totalTasks;
     };
 
     // Обработчик клика по задаче - переключает только одну задачу
@@ -240,7 +240,7 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
                                     bottom: 0,
                                     left: 0,
                                     right: 0,
-                                    height: `${(localValue / 5) * 100}%`,
+                                    height: `${(localValue / 1) * 100}%`,
                                     background: `#4CAF50`,
                                     borderRadius: '14px',
                                     transition: 'height 0.3s ease',

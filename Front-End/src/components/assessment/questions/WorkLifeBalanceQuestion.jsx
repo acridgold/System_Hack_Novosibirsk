@@ -6,16 +6,16 @@ import {
 } from '@mui/material'; 
 
 const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
-    const [localValue, setLocalValue] = useState(currentAnswer !== undefined ? currentAnswer : 2.5);
+    const [localValue, setLocalValue] = useState(currentAnswer !== undefined ? currentAnswer : 0.5);
     const [isDragging, setIsDragging] = useState(false);
     const [activeBowl, setActiveBowl] = useState(null);
     const startYRef = useRef(0);
-    const startValueRef = useRef(2.5);
+    const startValueRef = useRef(0.5);
 
-    // Преобразование значения 0-5 в угол наклона коромысла (в градусах)
+    // Преобразование значения 0-1 в угол наклона коромысла (в градусах)
     const getBeamRotation = (value) => {
-        // value: 0-5 -> угол: -15° до +15°
-        return (value - 2.5) * -6; // 2.5 -> 0°, 0 -> -15°, 5 -> +15°
+        // value: 0-1 -> угол: -15° до +15°
+        return (value - 0.5) * -30; // 0.5 -> 0°, 0 -> -15°, 1 -> +15°
     };
 
     const beamRotation = getBeamRotation(localValue);
@@ -36,9 +36,9 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
         const currentY = event.clientY || (event.touches && event.touches[0].clientY);
         const deltaY = currentY - startYRef.current;
         
-        // Чувствительность: 100px движения = изменение на 2.5 единицы
+        // Чувствительность: 100px движения = изменение на 0.5 единицы
         const sensitivity = 100;
-        const deltaValue = (deltaY / sensitivity) * 2.5;
+        const deltaValue = (deltaY / sensitivity) * 0.5;
 
         let newValue;
         if (activeBowl === 'work') {
@@ -49,7 +49,7 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
             newValue = startValueRef.current - deltaValue;
         }
 
-        newValue = Math.max(0, Math.min(5, newValue));
+        newValue = Math.max(0, Math.min(1, newValue));
         
         setLocalValue(newValue);
         onAnswer(newValue);
@@ -80,16 +80,16 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
 
     // ИНВЕРТИРОВАННЫЙ расчет заполнения шкалы
     const getScaleFill = (value) => {
-        if (value < 2.5) {
+        if (value < 0.5) {
             // Перевес в сторону жизни - заполняется ПРАВАЯ часть
             return {
                 left: 0,
-                right: ((2.5 - value) / 2.5) * 100 // 0-100%
+                right: ((0.5 - value) / 0.5) * 100 // 0-100%
             };
-        } else if (value > 2.5) {
+        } else if (value > 0.5) {
             // Перевес в сторону работы - заполняется ЛЕВАЯ часть
             return {
-                left: ((value - 2.5) / 2.5) * 100, // 0-100%
+                left: ((value - 0.5) / 0.5) * 100, // 0-100%
                 right: 0
             };
         } else {
@@ -173,7 +173,7 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 width: '100px', // Увеличено
                                 transform: `rotate(${-beamRotation}deg)`,
                                 cursor: isDragging && activeBowl === 'work' ? 'grabbing' : 'grab',
-                                filter: localValue > 2.5 ? `drop-shadow(0 0 5px #4CAF50)` : 'none',
+                                filter: localValue > 0.5 ? `drop-shadow(0 0 5px #4CAF50)` : 'none',
                                 '&:hover': !isDragging ? { filter: 'drop-shadow(0 0 8px rgba(0,0,0,0.3))' } : {},
                             }}
                         />
@@ -192,7 +192,7 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 width: '100px', // Увеличено
                                 transform: `rotate(${-beamRotation}deg)`,
                                 cursor: isDragging && activeBowl === 'life' ? 'grabbing' : 'grab',
-                                filter: localValue < 2.5 ? `drop-shadow(0 0 5px #4CAF50)` : 'none',
+                                filter: localValue < 0.5 ? `drop-shadow(0 0 5px #4CAF50)` : 'none',
                                 '&:hover': !isDragging ? { filter: 'drop-shadow(0 0 8px rgba(0,0,0,0.3))' } : {},
                             }}
                         />
