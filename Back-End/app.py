@@ -41,12 +41,14 @@ from routes.auth import auth_bp
 from routes.assessment import assessment_bp
 from routes.dashboard import dashboard_bp
 from routes.recommendations import recommendations_bp
+from routes.ai import ai_bp
 
 # Регистрируем blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(assessment_bp, url_prefix='/assessment')
 app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
 app.register_blueprint(recommendations_bp, url_prefix='/recommendations')
+app.register_blueprint(ai_bp, url_prefix='/ai')
 
 app_logger.info("Все blueprints зарегистрированы")
 
