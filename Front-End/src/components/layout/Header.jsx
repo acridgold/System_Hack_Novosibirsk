@@ -116,7 +116,7 @@ export default function Header() {
                                 display: { xs: 'none', sm: 'block' },
                             }}
                         >
-                            SDEK AI
+                            CDEK AI
                         </Typography>
                     </Box>
 

@@ -165,7 +165,7 @@ export default function Register() {
                         </Typography>
 
                         <Typography variant="body2" sx={{ color: '#4B5563', fontWeight: 500 }}>
-                            Создайте аккаунт в SDEK Burnout AI
+                            Создайте аккаунт в CDEK Burnout AI
                         </Typography>
                     </Box>
 

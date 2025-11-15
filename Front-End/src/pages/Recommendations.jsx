@@ -110,18 +110,21 @@ const Recommendations = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                     }}
                 >
-                    <Avatar
+                    <Box
                         sx={{
                             width: 100,
                             height: 100,
                             mx: 'auto',
                             mb: 3,
-                            bgcolor: 'warning.main',
-                            fontSize: '3rem',
+                            background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
+                            borderRadius: 3,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                         }}
                     >
-                        <Lock />
-                    </Avatar>
+                        <Lock sx={{ fontSize: '3rem', color: 'white' }} />
+                    </Box>
 
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
                         Персональные рекомендации

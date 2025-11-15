@@ -133,7 +133,7 @@ export default function Login() {
                                 mb: 1,
                             }}
                         >
-                            SDEK Burnout AI
+                            CDEK Burnout AI
                         </Typography>
 
                         <Typography variant="body2" sx={{ color: '#4B5563', fontWeight: 500 }}>

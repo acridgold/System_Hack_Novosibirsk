@@ -1,7 +1,7 @@
 {
   "name": "system_hack_novosibirsk",
   "version": "1.0.0",
-  "description": "SDEK Burnout AI - AI-инструмент для оценки выгорания сотрудников и партнёров. Hack System: Novosibirsk 2025",
+  "description": "CDEK Burnout AI - AI-инструмент для оценки выгорания сотрудников и партнёров. Hack System: Novosibirsk 2025",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -19,7 +19,7 @@
   "keywords": [
     "burnout",
     "ai",
-    "sdek",
+    "cdek",
     "mental-health",
     "hackathon",
     "react",
