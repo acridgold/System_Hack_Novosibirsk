@@ -7,6 +7,7 @@ import store from './store/store';
 
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Assessment from './pages/Assessment';
 import Dashboard from './pages/Dashboard';
 import Recommendations from './pages/Recommendations';
@@ -246,6 +247,7 @@ function App() {
                 <Router>
                     <Routes>
                         <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
                         <Route element={<Layout />}>
                             <Route path="/" element={<Home />} />
                             <Route path="/assessment" element={<Assessment />} />

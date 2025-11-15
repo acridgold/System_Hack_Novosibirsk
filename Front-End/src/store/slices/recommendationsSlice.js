@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
-import { MOCK_RECOMMENDATIONS } from '../../utils/mockUser';
+import { MOCK_RECOMMENDATIONS } from '../../utils/mockRecommendations.js';
 
 // Получение рекомендаций
 export const fetchRecommendations = createAsyncThunk(

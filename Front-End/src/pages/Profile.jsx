@@ -26,7 +26,6 @@ import {
     Edit,
     Save,
     Assessment,
-    TrendingDown,
     Logout,
     Login as LoginIcon,
     Person as PersonIcon,
@@ -83,7 +82,8 @@ const Profile = () => {
                         p: 4,
                         backgroundColor: 'background.paper',
                         borderRadius: 3,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        boxShadow: '0 4px 16px rgba(0, 170, 68, 0.1)',
+                        border: '1px solid #E0EFE5',
                     }}
                 >
                     <Box
@@ -97,7 +97,7 @@ const Profile = () => {
                             sx={{
                                 width: 80,
                                 height: 80,
-                                bgcolor: 'primary.main',
+                                background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
                                 fontSize: '3rem',
                             }}
                         >
@@ -114,7 +114,7 @@ const Profile = () => {
                     </Typography>
 
                     <Stack spacing={2}>
-                        <Alert severity="info">
+                        <Alert severity="info" sx={{ borderRadius: 2 }}>
                             Без авторизации ваши данные хранятся только локально и теряются при перезагрузке страницы.
                         </Alert>
 
@@ -123,7 +123,17 @@ const Profile = () => {
                             size="large"
                             startIcon={<LoginIcon />}
                             onClick={() => navigate('/login')}
-                            sx={{ py: 2 }}
+                            sx={{
+                                py: 2,
+                                background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
+                                backgroundSize: '300% 300%',
+                                fontWeight: 700,
+                                boxShadow: '0 4px 16px rgba(0, 255, 102, 0.3)',
+                                '&:hover': {
+                                    animation: 'gradientPulse 2s ease infinite',
+                                    boxShadow: '0 8px 24px rgba(0, 255, 102, 0.4)',
+                                },
+                            }}
                         >
                             Войти в систему
                         </Button>
@@ -132,6 +142,14 @@ const Profile = () => {
                             variant="outlined"
                             size="large"
                             onClick={() => navigate('/')}
+                            sx={{
+                                borderColor: '#00AA44',
+                                color: '#00AA44',
+                                '&:hover': {
+                                    borderColor: '#00FF66',
+                                    backgroundColor: 'rgba(0, 255, 102, 0.05)',
+                                },
+                            }}
                         >
                             Вернуться на главную
                         </Button>
@@ -139,7 +157,7 @@ const Profile = () => {
 
                     <Divider sx={{ my: 4 }} />
 
-                    <Typography variant="h6" gutterBottom fontWeight="bold">
+                    <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: '#00AA44' }}>
                         Преимущества авторизации:
                     </Typography>
                     <Stack spacing={1} sx={{ textAlign: 'left', ml: 2, mt: 2 }}>
@@ -158,7 +176,7 @@ const Profile = () => {
     if (authLoading) {
         return (
             <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-                <CircularProgress />
+                <CircularProgress sx={{ color: '#00AA44' }} />
             </Container>
         );
     }
@@ -166,9 +184,11 @@ const Profile = () => {
     const stats = [
         {
             label: 'Текущий уровень',
-            value: burnoutLevel || 'Не определен',
+            value: history && history.length > 0 ? (burnoutLevel || 'Не определен') : 'Нет данных',
             icon: <Assessment />,
-            color: burnoutLevel === 'high' ? 'error' : burnoutLevel === 'medium' ? 'warning' : 'success'
+            color: history && history.length > 0
+                ? (burnoutLevel === 'high' ? 'error' : burnoutLevel === 'medium' ? 'warning' : 'success')
+                : 'default'
         },
         {
             label: 'Всего тестов',
@@ -178,15 +198,9 @@ const Profile = () => {
         },
         {
             label: 'Дней в системе',
-            value: user?.daysInSystem || '1',
+            value: user?.daysInSystem || '0',
             icon: <CalendarToday />,
             color: 'info'
-        },
-        {
-            label: 'Рекомендаций выполнено',
-            value: user?.completedRecommendations || '0',
-            icon: <TrendingDown />,
-            color: 'success'
         },
     ];
 
@@ -195,7 +209,7 @@ const Profile = () => {
             <Grid container spacing={4}>
                 {/* Left Column - Profile Info */}
                 <Grid item xs={12} md={4}>
-                    <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+                    <Paper elevation={0} sx={{ p: 4, textAlign: 'center', border: '1px solid #E0EFE5' }}>
                         {/* Avatar */}
                         <Avatar
                             sx={{
@@ -203,8 +217,9 @@ const Profile = () => {
                                 height: 120,
                                 mx: 'auto',
                                 mb: 2,
-                                bgcolor: 'primary.main',
+                                background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
                                 fontSize: '3rem',
+                                fontWeight: 700,
                             }}
                         >
                             {user?.name?.charAt(0) || 'U'}
@@ -233,15 +248,15 @@ const Profile = () => {
                         {/* Contact Info */}
                         <Stack spacing={2} sx={{ textAlign: 'left', mb: 3 }}>
                             <Box display="flex" alignItems="center" gap={1}>
-                                <Email fontSize="small" color="action" />
+                                <Email fontSize="small" sx={{ color: '#00AA44' }} />
                                 <Typography variant="body2">{user?.email}</Typography>
                             </Box>
                             <Box display="flex" alignItems="center" gap={1}>
-                                <Work fontSize="small" color="action" />
+                                <Work fontSize="small" sx={{ color: '#00AA44' }} />
                                 <Typography variant="body2">{user?.department || 'Не указано'}</Typography>
                             </Box>
                             <Box display="flex" alignItems="center" gap={1}>
-                                <CalendarToday fontSize="small" color="action" />
+                                <CalendarToday fontSize="small" sx={{ color: '#00AA44' }} />
                                 <Typography variant="body2">
                                     С {user?.joinDate ? new Date(user.joinDate).toLocaleDateString('ru-RU') : 'Недавно'}
                                 </Typography>
@@ -256,6 +271,14 @@ const Profile = () => {
                                 onClick={editMode ? handleSave : () => setEditMode(true)}
                                 disabled={formLoading}
                                 fullWidth
+                                sx={{
+                                    background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
+                                    backgroundSize: '200% 200%',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                        animation: 'gradientPulse 2s ease infinite',
+                                    },
+                                }}
                             >
                                 {editMode ? 'Сохранить' : 'Редактировать'}
                             </Button>
@@ -276,14 +299,14 @@ const Profile = () => {
                 {/* Right Column - Stats and Settings */}
                 <Grid item xs={12} md={8}>
                     {/* Statistics */}
-                    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+                    <Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid #E0EFE5' }}>
                         <Typography variant="h5" fontWeight="bold" gutterBottom>
                             Статистика
                         </Typography>
                         <Grid container spacing={2} mt={1}>
                             {stats.map((stat, index) => (
-                                <Grid item xs={6} sm={3} key={index}>
-                                    <Card elevation={1} sx={{ textAlign: 'center', p: 2 }}>
+                                <Grid item xs={12} sm={4} key={index}>
+                                    <Card elevation={0} sx={{ textAlign: 'center', p: 2, border: '1px solid #E0EFE5' }}>
                                         <Avatar sx={{ bgcolor: `${stat.color}.main`, mx: 'auto', mb: 1 }}>
                                             {stat.icon}
                                         </Avatar>
@@ -301,7 +324,7 @@ const Profile = () => {
 
                     {/* Edit Form */}
                     {editMode && (
-                        <Paper elevation={3} sx={{ p: 3 }}>
+                        <Paper elevation={0} sx={{ p: 3, border: '1px solid #E0EFE5' }}>
                             <Typography variant="h5" fontWeight="bold" gutterBottom>
                                 Редактирование профиля
                             </Typography>
@@ -313,7 +336,7 @@ const Profile = () => {
                                     value={formData.name}
                                     onChange={handleChange('name')}
                                     fullWidth
-                                    InputProps={{ startAdornment: <Person sx={{ mr: 1, color: 'action.active' }} /> }}
+                                    InputProps={{ startAdornment: <Person sx={{ mr: 1, color: '#00AA44' }} /> }}
                                 />
                                 <TextField
                                     label="Email"
@@ -322,21 +345,21 @@ const Profile = () => {
                                     fullWidth
                                     type="email"
                                     disabled
-                                    InputProps={{ startAdornment: <Email sx={{ mr: 1, color: 'action.active' }} /> }}
+                                    InputProps={{ startAdornment: <Email sx={{ mr: 1, color: '#00AA44' }} /> }}
                                 />
                                 <TextField
                                     label="Должность"
                                     value={formData.position}
                                     onChange={handleChange('position')}
                                     fullWidth
-                                    InputProps={{ startAdornment: <Work sx={{ mr: 1, color: 'action.active' }} /> }}
+                                    InputProps={{ startAdornment: <Work sx={{ mr: 1, color: '#00AA44' }} /> }}
                                 />
                                 <TextField
                                     label="Отдел"
                                     value={formData.department}
                                     onChange={handleChange('department')}
                                     fullWidth
-                                    InputProps={{ startAdornment: <Work sx={{ mr: 1, color: 'action.active' }} /> }}
+                                    InputProps={{ startAdornment: <Work sx={{ mr: 1, color: '#00AA44' }} /> }}
                                 />
                                 <TextField
                                     label="Дата присоединения"
@@ -346,7 +369,7 @@ const Profile = () => {
                                     fullWidth
                                     InputLabelProps={{ shrink: true }}
                                     disabled
-                                    InputProps={{ startAdornment: <CalendarToday sx={{ mr: 1, color: 'action.active' }} /> }}
+                                    InputProps={{ startAdornment: <CalendarToday sx={{ mr: 1, color: '#00AA44' }} /> }}
                                 />
 
                                 <Stack direction="row" spacing={2}>
@@ -355,6 +378,9 @@ const Profile = () => {
                                         onClick={handleSave}
                                         disabled={formLoading}
                                         fullWidth
+                                        sx={{
+                                            background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
+                                        }}
                                     >
                                         {formLoading ? 'Сохранение...' : 'Сохранить изменения'}
                                     </Button>
@@ -362,6 +388,10 @@ const Profile = () => {
                                         variant="outlined"
                                         onClick={() => setEditMode(false)}
                                         fullWidth
+                                        sx={{
+                                            borderColor: '#00AA44',
+                                            color: '#00AA44',
+                                        }}
                                     >
                                         Отмена
                                     </Button>
@@ -372,7 +402,7 @@ const Profile = () => {
 
                     {/* Recent Tests */}
                     {!editMode && (
-                        <Paper elevation={3} sx={{ p: 3 }}>
+                        <Paper elevation={0} sx={{ p: 3, border: '1px solid #E0EFE5' }}>
                             <Typography variant="h5" fontWeight="bold" gutterBottom>
                                 История тестов
                             </Typography>
@@ -381,19 +411,19 @@ const Profile = () => {
                             {history && history.length > 0 ? (
                                 <Stack spacing={2}>
                                     {history.slice(-5).reverse().map((test, index) => (
-                                        <Card key={index} elevation={1}>
+                                        <Card key={index} elevation={0} sx={{ border: '1px solid #E0EFE5' }}>
                                             <CardContent>
                                                 <Box display="flex" justifyContent="space-between" alignItems="center">
                                                     <Box>
                                                         <Typography variant="body2" color="text.secondary">
-                                                            {new Date(test.timestamp).toLocaleDateString('ru-RU')}
+                                                            {new Date(test.timestamp || test.date).toLocaleDateString('ru-RU')}
                                                         </Typography>
                                                         <Typography variant="body1" fontWeight="bold">
                                                             Уровень выгорания: {test.burnoutLevel}
                                                         </Typography>
                                                     </Box>
                                                     <Chip
-                                                        label={`Баллы: ${test.score || 'N/A'}`}
+                                                        label={`${test.score || 0}%`}
                                                         color={test.burnoutLevel === 'high' ? 'error' : test.burnoutLevel === 'medium' ? 'warning' : 'success'}
                                                         variant="outlined"
                                                     />
@@ -403,8 +433,8 @@ const Profile = () => {
                                     ))}
                                 </Stack>
                             ) : (
-                                <Alert severity="info">
-                                    У вас пока нет пройденных тестов. <strong>Начните диагностику</strong> чтобы увидеть результаты.
+                                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                                    У вас пока нет пройденных тестов. <strong>Начните диагностику</strong>, чтобы увидеть результаты.
                                 </Alert>
                             )}
                         </Paper>

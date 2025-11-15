@@ -32,13 +32,17 @@ export default function Login() {
 
         try {
             const result = await dispatch(loginUser({ email, password }));
-            if (result.payload) {
+
+            if (loginUser.fulfilled.match(result)) {
                 navigate('/dashboard');
             } else {
-                setError('Ошибка при входе. Проверьте данные.');
+                // Показываем более понятную ошибку
+                setError(result.payload || 'Неверный логин или пароль');
             }
         } catch (err) {
-            setError('Ошибка подключения к серверу');
+            // Обработка ошибки сети
+            console.error('Network error:', err);
+            setError('Не удалось подключиться к серверу. Проверьте, что Backend запущен.');
         } finally {
             setLoading(false);
         }
@@ -57,7 +61,6 @@ export default function Login() {
                 background: 'radial-gradient(circle at 30% 50%, #E0F2EA 0%, #F0F9F5 30%, #D0EBDF 60%, #B0E3CF 100%)',
                 backgroundSize: '400% 400%',
                 animation: 'gradientShift 15s ease infinite',
-                // ===== СЕТКА ИЗ ТОЧЕК =====
                 '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -65,14 +68,11 @@ export default function Login() {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundImage: `
-                        radial-gradient(circle, rgba(0, 170, 68, 0.12) 1px, transparent 1px)
-                    `,
+                    backgroundImage: `radial-gradient(circle, rgba(0, 170, 68, 0.12) 1px, transparent 1px)`,
                     backgroundSize: '24px 24px',
                     pointerEvents: 'none',
                     zIndex: 1,
                 },
-                // ===== ДОПОЛНИТЕЛЬНЫЕ АКЦЕНТНЫЕ ТОЧКИ =====
                 '&::after': {
                     content: '""',
                     position: 'absolute',
@@ -80,9 +80,7 @@ export default function Login() {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundImage: `
-                        radial-gradient(circle, rgba(0, 255, 102, 0.08) 2px, transparent 2px)
-                    `,
+                    backgroundImage: `radial-gradient(circle, rgba(0, 255, 102, 0.08) 2px, transparent 2px)`,
                     backgroundSize: '48px 48px',
                     backgroundPosition: '12px 12px',
                     pointerEvents: 'none',
@@ -135,7 +133,7 @@ export default function Login() {
                                 mb: 1,
                             }}
                         >
-                            SDEK Burnout AI
+                            CDEK Burnout AI
                         </Typography>
 
                         <Typography variant="body2" sx={{ color: '#4B5563', fontWeight: 500 }}>
@@ -297,17 +295,13 @@ export default function Login() {
 
                     {/* Demo Credentials */}
                     <Paper
+                        elevation={0}
                         sx={{
                             p: 2.5,
-                            background: 'linear-gradient(135deg, rgba(0, 170, 68, 0.05) 0%, rgba(0, 255, 102, 0.08) 100%)',
-                            border: '2px solid rgba(0, 255, 102, 0.15)',
+                            backgroundColor: '#F0F9F5',
+                            border: '2px solid #00AA44',
                             borderRadius: 2,
-                            mb: 3,
-                            transition: 'all 0.3s',
-                            '&:hover': {
-                                border: '2px solid rgba(0, 255, 102, 0.25)',
-                                boxShadow: '0 4px 16px rgba(0, 255, 102, 0.1)',
-                            },
+                            mt: 2,
                         }}
                     >
                         <Typography
@@ -321,27 +315,73 @@ export default function Login() {
                         >
                             📧 Тестовые учетные данные:
                         </Typography>
-                        <Box sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 0.5,
-                            ml: 1,
-                        }}>
-                            <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.85rem' }}>
-                                Email: <strong style={{ color: '#00AA44' }}>user@example.com</strong>
+
+                        {/* Обычный сотрудник */}
+                        <Box sx={{ mb: 2 }}>
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: '#1DB954',
+                                    fontWeight: 700,
+                                    fontSize: '0.8rem',
+                                    mb: 0.5,
+                                    display: 'block',
+                                }}
+                            >
+                                👤 Сотрудник:
                             </Typography>
-                            <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.85rem' }}>
-                                Password: <strong style={{ color: '#00AA44' }}>password123</strong>
+                            <Box sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 0.5,
+                                ml: 1,
+                            }}>
+                                <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.85rem' }}>
+                                    Email: <strong style={{ color: '#00AA44' }}>user@example.com</strong>
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.85rem' }}>
+                                    Password: <strong style={{ color: '#00AA44' }}>password123</strong>
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        {/* Менеджер */}
+                        <Box>
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: '#047857',
+                                    fontWeight: 700,
+                                    fontSize: '0.8rem',
+                                    mb: 0.5,
+                                    display: 'block',
+                                }}
+                            >
+                                👔 Менеджер (доступ к команде):
                             </Typography>
+                            <Box sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 0.5,
+                                ml: 1,
+                            }}>
+                                <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.85rem' }}>
+                                    Email: <strong style={{ color: '#047857' }}>manager@cdek.ru</strong>
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.85rem' }}>
+                                    Password: <strong style={{ color: '#047857' }}>manager123</strong>
+                                </Typography>
+                            </Box>
                         </Box>
                     </Paper>
+
 
                     {/* Back Link */}
                     <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="body2" sx={{ color: '#4B5563' }}>
                             Нет аккаунта?{' '}
                             <Link
-                                onClick={() => navigate('/')}
+                                onClick={() => navigate('/register')}
                                 sx={{
                                     color: '#00AA44',
                                     fontWeight: 600,
@@ -349,12 +389,12 @@ export default function Login() {
                                     textDecoration: 'none',
                                     transition: 'all 0.2s',
                                     '&:hover': {
-                                        color: '#00ff33',
+                                        color: '#00FF66',
                                         textDecoration: 'underline',
                                     },
                                 }}
                             >
-                                Вернуться на главную
+                                Зарегистрироваться
                             </Link>
                         </Typography>
                     </Box>

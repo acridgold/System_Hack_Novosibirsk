@@ -104,7 +104,7 @@ export default function Home() {
                                         WebkitTextFillColor: 'transparent',
                                     }}
                                 >
-                                    SDEK Burnout AI
+                                    CDEK Burnout AI
                                 </Typography>
                             </Box>
 
@@ -219,7 +219,7 @@ export default function Home() {
                                 letterSpacing: '-0.01em',
                             }}
                         >
-                            Почему выбирают SDEK Burnout AI
+                            Почему выбирают CDEK Burnout AI
                         </Typography>
                         <Typography variant="body1" sx={{ color: '#4B5563', maxWidth: 500, mx: 'auto' }}>
                             Комплексный подход к оценке и управлению профессиональным выгоранием

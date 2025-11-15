@@ -1,9 +1,10 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-import os
 
-from logger import app_logger
+from routes.data.logger import app_logger
+from routes.data.config import get_config
+from routes.db.database import init_db
 
 app_logger.info("=" * 50)
 app_logger.info("Запуск приложения Flask")
@@ -12,12 +13,20 @@ app_logger.info("=" * 50)
 # Инициализируем приложение Flask
 app = Flask(__name__)
 
-# Конфигурация
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 86400))
+# Загружаем конфигурацию
+config = get_config()
+app.config.from_object(config)
 
-app_logger.info(f"Конфигурация загружена. JWT_ACCESS_TOKEN_EXPIRES: {app.config['JWT_ACCESS_TOKEN_EXPIRES']} секунд")
+app_logger.info(f"Конфигурация загружена: {config.__name__}")
+app_logger.info(f"БД: {app.config['SQLALCHEMY_DATABASE_URI']}")
+
+# Инициализируем БД с обработкой ошибок
+try:
+    init_db(app)
+    app_logger.info("SQLAlchemy инициализирована")
+except Exception as e:
+    app_logger.warning(f"Не удалось подключиться к БД: {e}")
+    app_logger.info("Приложение запустится без БД")
 
 # Инициализируем CORS
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -32,12 +41,14 @@ from routes.auth import auth_bp
 from routes.assessment import assessment_bp
 from routes.dashboard import dashboard_bp
 from routes.recommendations import recommendations_bp
+from routes.ai import ai_bp
 
 # Регистрируем blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(assessment_bp, url_prefix='/assessment')
 app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
 app.register_blueprint(recommendations_bp, url_prefix='/recommendations')
+app.register_blueprint(ai_bp, url_prefix='/ai')
 
 app_logger.info("Все blueprints зарегистрированы")
 

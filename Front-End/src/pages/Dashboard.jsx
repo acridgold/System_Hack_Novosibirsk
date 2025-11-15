@@ -9,7 +9,6 @@ import {
     Card,
     CardContent,
     Chip,
-    Avatar,
     Alert,
     Button,
     CircularProgress,
@@ -29,21 +28,16 @@ const Dashboard = () => {
     const [metrics, setMetrics] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Проверяем есть ли локальные результаты
     const { answers } = useSelector((state) => state.assessment);
     const hasLocalResults = Object.keys(answers || {}).length > 0;
 
     useEffect(() => {
-        // Загружаем историю при авторизации
         if (isAuthenticated && user) {
             dispatch(fetchAssessmentHistory());
 
-            // Загружаем метрики
             if (user.email === 'user@example.com') {
-                // Mock данные для тестового пользователя
                 setMetrics(MOCK_DASHBOARD_METRICS);
             } else {
-                // Реальные данные
                 fetchMetrics();
             }
         }
@@ -69,11 +63,15 @@ const Dashboard = () => {
         ];
     };
 
-    const pieData = [
-        { name: 'Эмоциональное истощение', value: emotionalExhaustion || 40, color: '#00AA44' },
-        { name: 'Деперсонализация', value: depersonalization || 30, color: '#1DB954' },
-        { name: 'Редукция достижений', value: reducedAccomplishment || 30, color: '#047857' },
-    ];
+    // ===== ПРОВЕРКА НАЛИЧИЯ ДАННЫХ =====
+    const hasTestResults = history && history.length > 0;
+    const hasValidData = hasTestResults && (emotionalExhaustion > 0 || depersonalization > 0 || reducedAccomplishment > 0);
+
+    const pieData = hasValidData ? [
+        { name: 'Эмоциональное истощение', value: emotionalExhaustion || 0, color: '#00AA44' },
+        { name: 'Деперсонализация', value: depersonalization || 0, color: '#1DB954' },
+        { name: 'Редукция достижений', value: reducedAccomplishment || 0, color: '#047857' },
+    ] : [];
 
     const burnoutLevelData = {
         low: { label: 'Низкий', color: 'success', description: 'Отличное состояние!' },
@@ -98,18 +96,21 @@ const Dashboard = () => {
                         border: '1px solid #E0EFE5',
                     }}
                 >
-                    <Avatar
+                    <Box
                         sx={{
                             width: 100,
                             height: 100,
                             mx: 'auto',
                             mb: 3,
-                            bgcolor: 'warning.main',
-                            fontSize: '3rem',
+                            background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
+                            borderRadius: 3,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                         }}
                     >
-                        <Lock />
-                    </Avatar>
+                        <Lock sx={{ fontSize: '3rem', color: 'white' }} />
+                    </Box>
 
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
                         Дашборд доступен после диагностики
@@ -126,7 +127,12 @@ const Dashboard = () => {
                             onClick={() => navigate('/assessment')}
                             sx={{
                                 minWidth: 200,
-                                background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                                background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
+                                backgroundSize: '200% 200%',
+                                fontWeight: 700,
+                                '&:hover': {
+                                    animation: 'gradientPulse 2s ease infinite',
+                                },
                             }}
                         >
                             Пройти диагностику
@@ -135,7 +141,15 @@ const Dashboard = () => {
                             variant="outlined"
                             size="large"
                             onClick={() => navigate('/')}
-                            sx={{ minWidth: 200 }}
+                            sx={{
+                                minWidth: 200,
+                                borderColor: '#00AA44',
+                                color: '#00AA44',
+                                '&:hover': {
+                                    borderColor: '#00FF66',
+                                    backgroundColor: 'rgba(0, 255, 102, 0.05)',
+                                },
+                            }}
                         >
                             На главную
                         </Button>
@@ -149,13 +163,12 @@ const Dashboard = () => {
     if (!isAuthenticated && hasLocalResults) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
-                {/* Header */}
                 <Paper
                     elevation={0}
                     sx={{
                         p: 3,
                         mb: 4,
-                        background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                        background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
                         color: 'white',
                         borderRadius: 2,
                     }}
@@ -168,7 +181,6 @@ const Dashboard = () => {
                     </Typography>
                 </Paper>
 
-                {/* Info Alert */}
                 <Alert severity="info" icon={<Info />} sx={{ mb: 4 }}>
                     <Box>
                         <Typography variant="body2" fontWeight="bold" gutterBottom>
@@ -180,7 +192,6 @@ const Dashboard = () => {
                     </Box>
                 </Alert>
 
-                {/* Metrics Cards */}
                 <Grid container spacing={3} mb={4}>
                     {[
                         {
@@ -226,7 +237,6 @@ const Dashboard = () => {
                     ))}
                 </Grid>
 
-                {/* Premium Features Alert */}
                 <Paper elevation={0} sx={{ p: 4, mb: 4, backgroundColor: '#F0F9F5', borderLeft: '5px solid #00AA44', border: '1px solid #E0EFE5' }}>
                     <Grid container spacing={3} alignItems="center">
                         <Grid item xs={12} md={8}>
@@ -250,7 +260,8 @@ const Dashboard = () => {
                                 onClick={() => navigate('/login')}
                                 fullWidth
                                 sx={{
-                                    background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                                    background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
+                                    fontWeight: 700,
                                 }}
                             >
                                 Авторизоваться
@@ -262,25 +273,22 @@ const Dashboard = () => {
         );
     }
 
-    // ===== ЗАГРУЗКА =====
     if (assessmentLoading || loading) {
         return (
             <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-                <CircularProgress />
+                <CircularProgress sx={{ color: '#00AA44' }} />
             </Container>
         );
     }
 
-    // ===== ЕСЛИ АВТОРИЗОВАН =====
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            {/* Header */}
             <Paper
                 elevation={0}
                 sx={{
                     p: 3,
                     mb: 4,
-                    background: 'linear-gradient(135deg, #00AA44 0%, #33CC77 100%)',
+                    background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 100%)',
                     color: 'white',
                     borderRadius: 2,
                 }}
@@ -293,18 +301,17 @@ const Dashboard = () => {
                 </Typography>
             </Paper>
 
-            {/* Metrics Cards */}
             <Grid container spacing={3} mb={4}>
                 {[
                     {
                         title: 'Уровень выгорания',
-                        value: levelInfo.label,
-                        subtitle: levelInfo.description,
-                        color: 'primary',
+                        value: hasTestResults ? levelInfo.label : 'Нет данных',
+                        subtitle: hasTestResults ? levelInfo.description : 'Пройдите тест',
+                        color: hasTestResults ? levelInfo.color : 'default',
                     },
                     {
                         title: 'Текущий показатель',
-                        value: `${score}%`,
+                        value: hasTestResults ? `${score}%` : '0%',
                         subtitle: 'От 0 до 100',
                         color: 'primary',
                     },
@@ -316,8 +323,8 @@ const Dashboard = () => {
                     },
                     {
                         title: 'Рекомендаций выполнено',
-                        value: '12 из 15',
-                        subtitle: '80% выполнение',
+                        value: hasTestResults ? '12 из 15' : '0 из 0',
+                        subtitle: hasTestResults ? '80% выполнение' : 'Пройдите тест',
                         color: 'success',
                     },
                 ].map((metric, index) => (
@@ -339,15 +346,14 @@ const Dashboard = () => {
                 ))}
             </Grid>
 
-            {/* Charts */}
             <Grid container spacing={3}>
                 {/* Line Chart */}
-                <Grid item xs={12} md={8}>
+                <Grid item xs={12} md={hasValidData ? 8 : 12}>
                     <Paper elevation={0} sx={{ p: 3, border: '1px solid #E0EFE5' }}>
                         <Typography variant="h5" gutterBottom fontWeight="bold">
                             Динамика показателей
                         </Typography>
-                        {metrics.length > 0 ? (
+                        {metrics.length > 0 && hasTestResults ? (
                             <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={metrics}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#E0EFE5" />
@@ -361,18 +367,20 @@ const Dashboard = () => {
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : (
-                            <Typography color="text.secondary">Нет данных для отображения</Typography>
+                            <Alert severity="info" sx={{ mt: 2 }}>
+                                Нет данных для отображения. Пройдите диагностику для получения метрик.
+                            </Alert>
                         )}
                     </Paper>
                 </Grid>
 
-                {/* Pie Chart */}
-                <Grid item xs={12} md={4}>
-                    <Paper elevation={0} sx={{ p: 3, border: '1px solid #E0EFE5' }}>
-                        <Typography variant="h5" gutterBottom fontWeight="bold">
-                            Структура выгорания
-                        </Typography>
-                        {pieData.some(item => item.value > 0) ? (
+                {/* Pie Chart - ТОЛЬКО ЕСЛИ ЕСТЬ ДАННЫЕ */}
+                {hasValidData && (
+                    <Grid item xs={12} md={4}>
+                        <Paper elevation={0} sx={{ p: 3, border: '1px solid #E0EFE5' }}>
+                            <Typography variant="h5" gutterBottom fontWeight="bold">
+                                Структура выгорания
+                            </Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
@@ -392,19 +400,17 @@ const Dashboard = () => {
                                     <Tooltip />
                                 </PieChart>
                             </ResponsiveContainer>
-                        ) : (
-                            <Typography color="text.secondary">Нет данных</Typography>
-                        )}
-                        <Box mt={2}>
-                            {pieData.map((item, index) => (
-                                <Box key={index} display="flex" alignItems="center" mb={1}>
-                                    <Box sx={{ width: 12, height: 12, bgcolor: item.color, borderRadius: 1, mr: 1 }} />
-                                    <Typography variant="body2">{item.name}: {item.value}%</Typography>
-                                </Box>
-                            ))}
-                        </Box>
-                    </Paper>
-                </Grid>
+                            <Box mt={2}>
+                                {pieData.map((item, index) => (
+                                    <Box key={index} display="flex" alignItems="center" mb={1}>
+                                        <Box sx={{ width: 12, height: 12, bgcolor: item.color, borderRadius: 1, mr: 1 }} />
+                                        <Typography variant="body2">{item.name}: {item.value}%</Typography>
+                                    </Box>
+                                ))}
+                            </Box>
+                        </Paper>
+                    </Grid>
+                )}
 
                 {/* History */}
                 <Grid item xs={12}>
@@ -436,7 +442,9 @@ const Dashboard = () => {
                                 ))}
                             </Grid>
                         ) : (
-                            <Typography color="text.secondary">История тестов пуста</Typography>
+                            <Alert severity="info">
+                                История тестов пуста. Пройдите первую диагностику!
+                            </Alert>
                         )}
                     </Paper>
                 </Grid>

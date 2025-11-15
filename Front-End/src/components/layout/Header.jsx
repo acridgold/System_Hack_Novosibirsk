@@ -17,6 +17,7 @@ import {
     ListItemText,
     ListItemIcon,
     Divider,
+    Badge,
 } from '@mui/material';
 import {
     Psychology,
@@ -27,8 +28,10 @@ import {
     Assessment,
     Dashboard as DashboardIcon,
     Lightbulb,
+    Groups,
 } from '@mui/icons-material';
 import { logout } from '../../store/slices/userSlice';
+import TeamModal from '../TeamModal';
 
 export default function Header() {
     const navigate = useNavigate();
@@ -38,6 +41,7 @@ export default function Header() {
 
     const [anchorEl, setAnchorEl] = useState(null);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [teamModalOpen, setTeamModalOpen] = useState(false);
 
     const handleMenu = (e) => setAnchorEl(e.currentTarget);
     const handleClose = () => setAnchorEl(null);
@@ -57,6 +61,13 @@ export default function Header() {
         navigate(path);
         setMobileOpen(false);
     };
+
+    const handleTeamModalOpen = () => {
+        setTeamModalOpen(true);
+        setMobileOpen(false);
+    };
+
+    const isManager = user?.role === 'manager';
 
     const navItems = [
         { label: 'Диагностика', path: '/assessment', icon: <Assessment /> },
@@ -116,7 +127,7 @@ export default function Header() {
                                 display: { xs: 'none', sm: 'block' },
                             }}
                         >
-                            SDEK AI
+                            CDEK AI
                         </Typography>
                     </Box>
 
@@ -148,6 +159,53 @@ export default function Header() {
                                 {item.label}
                             </Button>
                         ))}
+
+                        {/* Кнопка "Команда" для менеджера (Desktop) */}
+                        {isAuthenticated && isManager && (
+                            <Button
+                                onClick={handleTeamModalOpen}
+                                startIcon={<Groups />}
+                                sx={{
+                                    color: 'white',
+                                    fontWeight: 700,
+                                    background: 'linear-gradient(135deg, #00AA44 0%, #1DB954 100%)',
+                                    px: 2,
+                                    ml: 1,
+                                    borderRadius: 2,
+                                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                                    boxShadow: '0 4px 12px rgba(0, 170, 68, 0.3)',
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, #00CC55 0%, #00FF66 100%)',
+                                        boxShadow: '0 6px 16px rgba(0, 170, 68, 0.4)',
+                                        transform: 'translateY(-2px)',
+                                    },
+                                    transition: 'all 0.2s',
+                                }}
+                            >
+                                Команда
+                                <Box sx={{ ml: 2 }}>
+                                    <Badge
+                                        badgeContent={5}
+                                        color="error"
+                                        anchorOrigin={{
+                                            vertical: 'top',
+                                            horizontal: 'right',
+                                        }}
+                                        sx={{
+                                            '& .MuiBadge-badge': {
+                                                fontSize: '0.75rem',
+                                                fontWeight: 700,
+                                                top: -1,
+                                                right: -2,
+                                            },
+                                        }}
+                                    >
+                                        <Box sx={{ width: 0, height: 0 }} /> {}
+                                    </Badge>
+                                </Box>
+
+                            </Button>
+                        )}
                     </Box>
 
                     {/* Auth Section */}
@@ -274,6 +332,44 @@ export default function Header() {
                                 />
                             </ListItem>
                         ))}
+
+                        {/* Кнопка "Команда" для менеджера (Mobile) */}
+                        {isAuthenticated && isManager && (
+                            <ListItem
+                                button
+                                onClick={handleTeamModalOpen}
+                                sx={{
+                                    borderRadius: 1,
+                                    mb: 1,
+                                    backgroundColor: '#E0F2EA',
+                                    border: '2px solid #00AA44',
+                                    '&:hover': {
+                                        backgroundColor: '#D0EBDF',
+                                    },
+                                }}
+                            >
+                                <ListItemIcon sx={{ color: '#00AA44', minWidth: 40 }}>
+                                    <Groups />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary="Команда"
+                                    primaryTypographyProps={{
+                                        fontWeight: 700,
+                                        color: '#00AA44',
+                                    }}
+                                />
+                                <Badge
+                                    badgeContent={5}
+                                    color="error"
+                                    sx={{
+                                        '& .MuiBadge-badge': {
+                                            fontSize: '0.65rem',
+                                            fontWeight: 700,
+                                        },
+                                    }}
+                                />
+                            </ListItem>
+                        )}
                     </List>
 
                     <Divider sx={{ my: 2 }} />
@@ -316,15 +412,14 @@ export default function Header() {
                     ) : (
                         <Button
                             variant="contained"
-                            onClick={() => navigate('/login')}
+                            fullWidth
+                            onClick={() => handleNavigate('/login')}
                             sx={{
-                                display: { xs: 'none', sm: 'flex' },
                                 background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
                                 backgroundSize: '300% 300%',
                                 color: 'white',
                                 borderRadius: 2,
-                                px: 4,
-                                py: 1,
+                                py: 1.5,
                                 fontWeight: 700,
                                 boxShadow: '0 4px 16px rgba(0, 255, 102, 0.3)',
                                 border: '2px solid rgba(255,255,255,0.2)',
@@ -339,10 +434,12 @@ export default function Header() {
                         >
                             Войти
                         </Button>
-
                     )}
                 </Box>
             </Drawer>
+
+            {/* Team Modal */}
+            <TeamModal open={teamModalOpen} onClose={() => setTeamModalOpen(false)} />
         </>
     );
 }
