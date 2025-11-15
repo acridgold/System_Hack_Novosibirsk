@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
-from db.db_models import EmployeeData
+from .db.db_models import EmployeeData
 
 # Текущая дата по умолчанию (можно передать свою)
 DEFAULT_CURRENT_DATE = datetime.utcnow()
