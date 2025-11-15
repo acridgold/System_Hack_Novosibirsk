@@ -6,6 +6,10 @@ from .db.database import db
 # Импортируем логгер
 from .data.logger import assessment_logger
 
+# Доп. импорт для определения ошибок БД
+import psycopg2
+from sqlalchemy import exc as sa_exc
+
 assessment_bp = Blueprint('assessment', __name__)
 
 def calculate_burnout_scores(answers):
@@ -146,6 +150,10 @@ def submit_assessment():
 
         return jsonify(new_assessment.to_dict()), 201
 
+    except (psycopg2.OperationalError, sa_exc.OperationalError) as db_error:
+        db.session.rollback()
+        assessment_logger.error(f"Ошибка подключения к БД: {str(db_error)}", exc_info=True)
+        return jsonify({'detail': 'Database connection error'}), 503
     except Exception as e:
         db.session.rollback()
         assessment_logger.error(f"Ошибка при сохранении диагностики: {str(e)}", exc_info=True)

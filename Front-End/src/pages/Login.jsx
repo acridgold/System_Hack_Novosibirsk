@@ -33,16 +33,16 @@ export default function Login() {
         try {
             const result = await dispatch(loginUser({ email, password }));
 
-            // Проверяем успешность авторизации
             if (loginUser.fulfilled.match(result)) {
-                // Успешная авторизация - переходим на dashboard
                 navigate('/dashboard');
             } else {
-                // Ошибка авторизации - показываем сообщение
+                // Показываем более понятную ошибку
                 setError(result.payload || 'Неверный логин или пароль');
             }
         } catch (err) {
-            setError('Ошибка подключения к серверу');
+            // Обработка ошибки сети
+            console.error('Network error:', err);
+            setError('Не удалось подключиться к серверу. Проверьте, что Backend запущен.');
         } finally {
             setLoading(false);
         }

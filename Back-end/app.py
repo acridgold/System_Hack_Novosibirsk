@@ -20,9 +20,13 @@ app.config.from_object(config)
 app_logger.info(f"Конфигурация загружена: {config.__name__}")
 app_logger.info(f"БД: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
-# Инициализируем БД
-init_db(app)
-app_logger.info("SQLAlchemy инициализирована")
+# Инициализируем БД с обработкой ошибок
+try:
+    init_db(app)
+    app_logger.info("SQLAlchemy инициализирована")
+except Exception as e:
+    app_logger.warning(f"Не удалось подключиться к БД: {e}")
+    app_logger.info("Приложение запустится без БД")
 
 # Инициализируем CORS
 CORS(app, resources={r"/*": {"origins": "*"}})
