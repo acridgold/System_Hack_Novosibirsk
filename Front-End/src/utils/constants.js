@@ -11,7 +11,7 @@ export const ASSESSMENT_QUESTIONS = [
         // BA
         id: 1,
         text: 'Оцените Ваш баланс между работой и жизнью',
-        subtitle: 'Для этого перемещайте чаши весов',
+        subtitle: 'Перемещайте чаши весов вверх и вниз',
         category: 'professional_activity',
         component: 'WorkLifeBalanceQuestion'
     },
@@ -19,7 +19,7 @@ export const ASSESSMENT_QUESTIONS = [
         //PS
         id: 2,
         text: 'Стремитесь ли Вы к совершенству?',
-        subtitle: 'Покажите, каким результатом работы вы были бы довольны',
+        subtitle: 'Отмечайте галочками выполненные «задания»',
         category: 'professional_activity',
         component: 'PerfectWorkQuestion'
     },
@@ -27,7 +27,7 @@ export const ASSESSMENT_QUESTIONS = [
         //DF
         id: 3,
         text: 'Умеете ли Вы отдыхать после работы?',
-        subtitle: 'Переместите аватара чтобы отметить ваше состояние',
+        subtitle: 'Перемещайте сотрудника между работой и отдыхом',
         category: 'professional_activity',
         component: 'RelaxAbilityQuestion'
     },
@@ -35,7 +35,7 @@ export const ASSESSMENT_QUESTIONS = [
         //VB
         id: 4,
         text: 'Сколько времени и сил Вы посвещаете работе?',
-        subtitle: 'Покажите на часах, поворачивая часовую стрелку, сколько времени вы готовы посвящать работе',
+        subtitle: 'Поворачивайте часовую стрелку',
         category: 'professional_activity',
         component: 'TimeCostsQuestion'
     },
@@ -43,15 +43,17 @@ export const ASSESSMENT_QUESTIONS = [
         //RT
         id: 5,
         text: 'Оцените свое умения справляться с неудачами',
-        subtitle: '',
+        subtitle: 'Перетаскивайте кусочки, чтобы собрать разбитый объект',
         category: 'mental_stability',
+        component: 'ProblemSolvingQuestion'
     },
     {
         //OP
         id: 6,
         text: 'Как вы реагируете на проблемы на работе?',
-        subtitle: '',
+        subtitle: 'Удлиняйте лестницу, перемещая сотрудника',
         category: 'mental_stability',
+        component: 'GivingUpQuestion'
     },
     {
         //IR
