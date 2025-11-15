@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 from .models import ASSESSMENTS_DB, ASSESSMENT_QUESTIONS
+from .redisClient import redis_client  # Добавляем импорт Redis
 
 # Импортируем логгер
 from logger import assessment_logger
@@ -126,6 +127,13 @@ def submit_assessment():
             ASSESSMENTS_DB[user_id] = []
 
         ASSESSMENTS_DB[user_id].insert(0, new_assessment)  # Добавляем в начало для актуальности
+        # Сохраняем последнюю диагностику в Redis на 1 неделю
+        last_assessment_key = f"user:{user_id}:last_assessment"
+        redis_client.set_json(last_assessment_key, new_assessment, ttl_seconds=604800)  # 7 дней
+
+        # Инвалидируем кэш сводки дашборда
+        summary_cache_key = f"user:{user_id}:summary"
+        redis_client.delete(summary_cache_key)
 
         assessment_logger.info(f"Диагностика сохранена. ID диагностики: {new_assessment['id']}")
 
@@ -154,12 +162,26 @@ def get_assessment_history():
     try:
         user_id = get_jwt_identity()
 
+        # Пытаемся получить историю из кэша
+        cache_key = f"user:{user_id}:assessment_history"
+        cached_history = redis_client.get_json(cache_key)
+
+        if cached_history:
+            return jsonify({
+                'assessments': cached_history,
+                'total': len(cached_history),
+            }), 200
+
         assessments = ASSESSMENTS_DB.get(user_id, [])
+
+        # Сохраняем историю в кэш на 1 час
+        redis_client.set_json(cache_key, assessments, ttl_seconds=3600)
 
         return jsonify({
             'assessments': assessments,
             'total': len(assessments),
         }), 200
+
 
     except Exception as e:
         return jsonify({'detail': str(e)}), 500
