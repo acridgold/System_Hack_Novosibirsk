@@ -1,10 +1,15 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from db.db_models import Recommendation, User
-from db.database import db
+from .db.db_models import Recommendation, User
+from .db.database import db
 
 # Импортируем логгер
-from data.logger import recommendations_logger
+from .data.logger import recommendations_logger
+
+# Доп. импорт для определения ошибок БД
+import psycopg2
+import sqlalchemy
+from sqlalchemy import exc as sa_exc
 
 recommendations_bp = Blueprint('recommendations', __name__)
 
@@ -37,6 +42,10 @@ def get_recommendations():
             'recommendations': [r.to_dict() for r in recommendations],
             'total': len(recommendations),
         }), 200
+
+    except (psycopg2.OperationalError, sa_exc.OperationalError) as e:
+        recommendations_logger.error(f"Ошибка подключения к БД при получении рекомендаций: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
 
     except Exception as e:
         recommendations_logger.error(f"Ошибка при получении рекомендаций: {str(e)}", exc_info=True)
@@ -73,8 +82,19 @@ def mark_recommendation_complete(recommendation_id):
 
         return jsonify(rec.to_dict()), 200
 
+    except (psycopg2.OperationalError, sa_exc.OperationalError) as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        recommendations_logger.error(f"Ошибка подключения к БД при отметке рекомендации: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
+
     except Exception as e:
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         recommendations_logger.error(f"Ошибка при отметке рекомендации: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
 
@@ -109,8 +129,19 @@ def mark_recommendation_incomplete(recommendation_id):
 
         return jsonify(rec.to_dict()), 200
 
+    except (psycopg2.OperationalError, sa_exc.OperationalError) as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        recommendations_logger.error(f"Ошибка подключения к БД при отметке рекомендации: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
+
     except Exception as e:
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         recommendations_logger.error(f"Ошибка при отметке рекомендации: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
 
@@ -140,6 +171,10 @@ def get_recommendation(recommendation_id):
 
         recommendations_logger.info(f"Рекомендация ID: {recommendation_id} найдена")
         return jsonify(rec.to_dict()), 200
+
+    except (psycopg2.OperationalError, sa_exc.OperationalError) as e:
+        recommendations_logger.error(f"Ошибка подключения к БД при получении рекомендации: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
 
     except Exception as e:
         recommendations_logger.error(f"Ошибка при получении рекомендации: {str(e)}", exc_info=True)

@@ -1,9 +1,14 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from db.db_models import User
-from db.database import db
+from .db.db_models import User
+from .db.database import db
 
-from data.logger import auth_logger
+from .data.logger import auth_logger
+
+# Доп. импорт для определения ошибок БД
+import psycopg2
+import sqlalchemy
+from sqlalchemy import exc as sa_exc
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -75,8 +80,20 @@ def register():
             'user': new_user.to_dict()
         }), 201
 
+    except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
+        # Ошибка подключения к БД — возвращаем 503
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        auth_logger.error(f"Ошибка подключения к БД при регистрации: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
+
     except Exception as e:
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         auth_logger.error(f"Ошибка при регистрации: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
 
@@ -124,6 +141,10 @@ def login():
             'user': user.to_dict()
         }), 200
 
+    except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
+        auth_logger.error(f"Ошибка подключения к БД при авторизации: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
+
     except Exception as e:
         auth_logger.error(f"Ошибка при авторизации: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
@@ -154,6 +175,10 @@ def verify_token():
             'user': user.to_dict()
         }), 200
 
+    except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
+        auth_logger.error(f"Ошибка подключения к БД при проверке токена: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
+
     except Exception as e:
         auth_logger.error(f"Ошибка при проверке токена: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500
@@ -182,6 +207,10 @@ def get_current_user():
 
         auth_logger.info(f"Данные пользователя получены: {user.email}")
         return jsonify(user.to_dict()), 200
+
+    except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
+        auth_logger.error(f"Ошибка подключения к БД при получении текущего пользователя: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
 
     except Exception as e:
         auth_logger.error(f"Ошибка при получении данных пользователя: {str(e)}", exc_info=True)

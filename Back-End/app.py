@@ -20,9 +20,13 @@ app.config.from_object(config)
 app_logger.info(f"Конфигурация загружена: {config.__name__}")
 app_logger.info(f"БД: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
-# Инициализируем БД
-init_db(app)
-app_logger.info("SQLAlchemy инициализирована")
+# Инициализируем БД с обработкой ошибок
+try:
+    init_db(app)
+    app_logger.info("SQLAlchemy инициализирована")
+except Exception as e:
+    app_logger.warning(f"Не удалось подключиться к БД: {e}")
+    app_logger.info("Приложение запустится без БД")
 
 # Инициализируем CORS
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -32,20 +36,19 @@ app_logger.info("CORS инициализирован")
 jwt = JWTManager(app)
 app_logger.info("JWT инициализирован")
 
-# Импортируем ORM модели
-from routes.db.db_models import User, Assessment, Recommendation, Metric, OldUser
-
 # Импортируем blueprints с роутами
 from routes.auth import auth_bp
 from routes.assessment import assessment_bp
 from routes.dashboard import dashboard_bp
 from routes.recommendations import recommendations_bp
+from routes.ai import ai_bp
 
 # Регистрируем blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(assessment_bp, url_prefix='/assessment')
 app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
 app.register_blueprint(recommendations_bp, url_prefix='/recommendations')
+app.register_blueprint(ai_bp, url_prefix='/ai')
 
 app_logger.info("Все blueprints зарегистрированы")
 

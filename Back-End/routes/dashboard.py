@@ -1,9 +1,14 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from db.db_models import Metric, Assessment, User
+from .db.db_models import Metric, Assessment, User
 
 # Импортируем логгер
-from data.logger import dashboard_logger
+from .data.logger import dashboard_logger
+
+# Доп. импорт для определения ошибок БД
+import psycopg2
+import sqlalchemy
+from sqlalchemy import exc as sa_exc
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -31,6 +36,10 @@ def get_metrics():
             'period': 'week',
             'total': len(metrics),
         }), 200
+
+    except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
+        dashboard_logger.error(f"Ошибка подключения к БД при получении метрик: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
 
     except Exception as e:
         dashboard_logger.error(f"Ошибка при получении метрик: {str(e)}", exc_info=True)
@@ -80,6 +89,10 @@ def get_summary():
             dashboard_logger.info(f"Нет диагностик для пользователя ID: {user_id}")
 
         return jsonify(summary), 200
+
+    except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
+        dashboard_logger.error(f"Ошибка подключения к БД при получении сводки: {e}", exc_info=True)
+        return jsonify({'detail': 'Service unavailable (database)'}), 503
 
     except Exception as e:
         dashboard_logger.error(f"Ошибка при получении сводки: {str(e)}", exc_info=True)

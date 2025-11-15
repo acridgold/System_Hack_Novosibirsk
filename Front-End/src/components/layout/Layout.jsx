@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Box } from '@mui/material';
 import Header from './Header';
+import Assistant from '../common/Assistant';
 
 export default function Layout() {
     return (
@@ -10,6 +11,8 @@ export default function Layout() {
             <Box component="main" sx={{ flex: 1 }}>
                 <Outlet />
             </Box>
+            {/* Глобальный ассистент — остаётся между переходами */}
+            <Assistant />
         </Box>
     );
 }
