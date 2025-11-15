@@ -10,10 +10,8 @@ import {
     CardContent,
     Chip,
     Button,
-    Stack,
     Avatar,
     Alert,
-
 } from '@mui/material';
 import {
     Lightbulb,
@@ -25,14 +23,18 @@ import {
     Lock,
     Login as LoginIcon,
     Info,
+    Restaurant,
+    Bedtime,
+    Groups,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { fetchRecommendations, localMarkComplete } from '../store/slices/recommendationsSlice';
+import { MOCK_RECOMMENDATIONS } from '../utils/mockRecommendations.js';
 
 const Recommendations = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { tips} = useSelector((state) => state.recommendations);
+    const { tips } = useSelector((state) => state.recommendations);
     const { isAuthenticated, user } = useSelector((state) => state.user);
     const { answers } = useSelector((state) => state.assessment);
     const [completed, setCompleted] = React.useState({});
@@ -49,41 +51,35 @@ const Recommendations = () => {
         dispatch(localMarkComplete(id));
     };
 
-    // Mock рекомендации (базовые, для неавторизованных пользователей)
-    const basicTips = [
-        {
-            id: 1,
-            category: 'Медитация',
-            icon: <SelfImprovement />,
-            color: '#9c27b0',
-            title: 'Практикуйте осознанность',
-            description: 'Уделяйте 10 минут в день медитации или дыхательным упражнениям для снижения стресса',
-            priority: 'high',
-            duration: '10 мин/день',
-        },
-        {
-            id: 2,
-            category: 'Тайм-менеджмент',
-            icon: <Schedule />,
-            color: '#2196f3',
-            title: 'Используйте технику Pomodoro',
-            description: 'Работайте 25 минут, затем делайте 5-минутный перерыв для повышения концентрации',
-            priority: 'high',
-            duration: '30 мин циклы',
-        },
-        {
-            id: 3,
-            category: 'Физическая активность',
-            icon: <FitnessCenter />,
-            color: '#4caf50',
-            title: 'Регулярные упражнения',
-            description: 'Занимайтесь физической активностью минимум 3 раза в неделю по 30 минут',
-            priority: 'medium',
-            duration: '3 раза/неделю',
-        },
-    ];
+    // Иконки для категорий
+    const categoryIcons = {
+        'Медитация': <SelfImprovement />,
+        'Тайм-менеджмент': <Schedule />,
+        'Физическая активность': <FitnessCenter />,
+        'Сон': <Bedtime />,
+        'Питание': <Restaurant />,
+        'Социальные связи': <Groups />,
+    };
 
-    const recommendationsList = tips.length > 0 ? tips : basicTips;
+    // Цвета для категорий
+    const categoryColors = {
+        'Медитация': '#9c27b0',
+        'Тайм-менеджмент': '#2196f3',
+        'Физическая активность': '#4caf50',
+        'Сон': '#673ab7',
+        'Питание': '#ff9800',
+        'Социальные связи': '#e91e63',
+    };
+
+    // Маппинг рекомендаций из mockRecommendations с иконками и цветами
+    const enrichedRecommendations = MOCK_RECOMMENDATIONS.map(rec => ({
+        ...rec,
+        icon: categoryIcons[rec.category] || <Lightbulb />,
+        color: categoryColors[rec.category] || '#00AA44',
+    }));
+
+    // Используем enriched рекомендации или tips из API
+    const recommendationsList = tips.length > 0 ? tips : enrichedRecommendations;
 
     const priorityColors = {
         high: 'error',
@@ -208,7 +204,7 @@ const Recommendations = () => {
                         </Grid>
                         <Grid item xs={12} md={4}>
                             <Typography variant="h3" color="warning.main" fontWeight="bold">
-                                {basicTips.length}
+                                3
                             </Typography>
                             <Typography variant="body1" color="text.secondary">
                                 Базовых советов
@@ -216,7 +212,7 @@ const Recommendations = () => {
                         </Grid>
                         <Grid item xs={12} md={4}>
                             <Typography variant="h3" color="success.main" fontWeight="bold">
-                                {Math.round((Object.keys(completed).filter((k) => completed[k]).length / basicTips.length) * 100) || 0}%
+                                {Math.round((Object.keys(completed).filter((k) => completed[k]).length / 3) * 100) || 0}%
                             </Typography>
                             <Typography variant="body1" color="text.secondary">
                                 Прогресс сегодня
@@ -227,7 +223,7 @@ const Recommendations = () => {
 
                 {/* Recommendations Grid - Limited to 3 */}
                 <Grid container spacing={3} mb={4}>
-                    {basicTips.slice(0, 3).map((tip, index) => (
+                    {enrichedRecommendations.slice(0, 3).map((tip) => (
                         <Grid item xs={12} md={4} key={tip.id}>
                             <Card
                                 elevation={completed[tip.id] ? 1 : 3}
@@ -249,11 +245,6 @@ const Recommendations = () => {
                                                 <Typography variant="caption" color="text.secondary" display="block">
                                                     {tip.category}
                                                 </Typography>
-                                                <Chip
-                                                    label={priorityLabels[tip.priority]}
-                                                    color={priorityColors[tip.priority]}
-                                                    size="small"
-                                                />
                                             </div>
                                         </Box>
                                         <Box
@@ -276,13 +267,6 @@ const Recommendations = () => {
                                         {tip.description}
                                     </Typography>
 
-                                    {/* Footer */}
-                                    <Chip
-                                        icon={<Schedule />}
-                                        label={tip.duration}
-                                        size="small"
-                                        variant="outlined"
-                                    />
                                 </CardContent>
                             </Card>
                         </Grid>
@@ -356,7 +340,7 @@ const Recommendations = () => {
                             Персональные рекомендации
                         </Typography>
                         <Typography variant="body1">
-                            AI-советы для {user?.name}, адаптированные под ваши результаты
+                            Советы для {user?.name}, адаптированные под ваши результаты
                         </Typography>
                     </div>
                 </Box>
@@ -402,7 +386,7 @@ const Recommendations = () => {
 
             {/* Recommendations Grid */}
             <Grid container spacing={3} mb={4}>
-                {recommendationsList.map((tip, index) => (
+                {recommendationsList.map((tip) => (
                     <Grid item xs={12} md={6} key={tip.id}>
                         <Card
                             elevation={completed[tip.id] ? 1 : 3}
@@ -420,14 +404,9 @@ const Recommendations = () => {
                                             {tip.icon}
                                         </Avatar>
                                         <div>
-                                            <Typography variant="caption" color="text.secondary" display="block">
+                                            <Typography variant="caption" color="text.primary" display="block">
                                                 {tip.category}
                                             </Typography>
-                                            <Chip
-                                                label={priorityLabels[tip.priority]}
-                                                color={priorityColors[tip.priority]}
-                                                size="small"
-                                            />
                                         </div>
                                     </Box>
                                     <Box
@@ -453,20 +432,18 @@ const Recommendations = () => {
 
                                 {/* Footer */}
                                 <Box display="flex" alignItems="center" justifyContent="space-between" mt={2}>
-                                    <Chip
-                                        icon={<Schedule />}
-                                        label={tip.duration}
-                                        size="small"
-                                        variant="outlined"
-                                    />
-                                    <Button
-                                        size="small"
-                                        endIcon={<ArrowForward />}
-                                        sx={{ color: tip.color }}
-                                        onClick={() => tip.link && navigate(tip.link)}
-                                    >
-                                        Подробнее
-                                    </Button>
+                                    {tip.link && (
+                                        <Button
+                                            size="small"
+                                            endIcon={<ArrowForward />}
+                                            sx={{ color: tip.color }}
+                                            href={tip.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Подробнее
+                                        </Button>
+                                    )}
                                 </Box>
                             </CardContent>
                         </Card>
@@ -480,8 +457,9 @@ const Recommendations = () => {
                     variant="contained"
                     size="large"
                     startIcon={<Lightbulb />}
+                    onClick={() => dispatch(fetchRecommendations())}
                 >
-                    Получить новые рекомендации
+                    Обновить рекомендации
                 </Button>
             </Box>
         </Container>

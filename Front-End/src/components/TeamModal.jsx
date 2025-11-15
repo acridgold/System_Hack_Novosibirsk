@@ -186,7 +186,7 @@ const TeamModal = ({ open, onClose }) => {
             </DialogTitle>
 
             {/* Content */}
-            <DialogContent sx={{ p: 3, backgroundColor: '#F9FAFB' }}>
+            <DialogContent sx={{p: 3, mt: 3, backgroundColor: '#F9FAFB' }}>
                 {/* Alert */}
                 {stats.critical > 0 && (
                     <Alert
@@ -195,7 +195,7 @@ const TeamModal = ({ open, onClose }) => {
                         sx={{ mb: 3, borderRadius: 2 }}
                     >
                         <Typography variant="body2" fontWeight="bold">
-                            Обнаружено {stats.critical} сотрудников с критическим уровнем выгорания
+                            Обнаружено {stats.critical} сотрудника(-ов) с критическим уровнем выгорания
                         </Typography>
                         <Typography variant="caption">
                             Рекомендуется провести индивидуальные беседы и пересмотреть нагрузку
