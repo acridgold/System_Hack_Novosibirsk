@@ -26,6 +26,7 @@ class User(db.Model):
     # Связи
     assessments = relationship('Assessment', back_populates='user', cascade='all, delete-orphan')
     recommendations = relationship('Recommendation', back_populates='user', cascade='all, delete-orphan')
+    employee_data = relationship('EmployeeData', back_populates='user', uselist=False, cascade='all, delete-orphan')
 
     def to_dict(self):
         """Преобразование объекта в словарь"""
@@ -161,3 +162,42 @@ class OldUser(db.Model):
     def __repr__(self):
         return f'<OldUser {self.email}>'
 
+class EmployeeData(db.Model):
+    """Отдельный класс для данных из Excel (отдельная таблица/база)"""
+    __tablename__ = 'employee_data'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), unique=True, nullable=False, index=True)  # Связь с User (one-to-one)
+    full_name = Column(String(255))  # Имя + Фамилия + Отчество (если нужно)
+    gender = Column(String(50))  # Пол
+    age = Column(Integer)  # Возраст
+    position = Column(String(255))  # Должность
+    department = Column(String(255))  # Отдел
+    tenure = Column(String(255))  # Стаж (строка вроде '5 лет 4 месяца')
+    training = Column(String(100))  # Обучение ('завершена', 'в процессе' и т.д.)
+    last_vacation = Column(DateTime)  # Отпуск (когда ходил в последний раз), конвертировано из Excel date
+    subordinates = Column(String(255))  # В подчинении сотрудники (для нормализации position)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Связь
+    user = relationship('User', back_populates='employee_data')
+
+    def to_dict(self):
+        """Преобразование в словарь"""
+        return {
+            'id': self.id,
+            'userId': self.user_id,
+            'fullName': self.full_name,
+            'gender': self.gender,
+            'age': self.age,
+            'position': self.position,
+            'department': self.department,
+            'tenure': self.tenure,
+            'training': self.training,
+            'lastVacation': self.last_vacation.strftime('%Y-%m-%d') if self.last_vacation else None,
+            'subordinates': self.subordinates,
+        }
+
+    def __repr__(self):
+        return f'<EmployeeData {self.id} - User {self.user_id}>'
