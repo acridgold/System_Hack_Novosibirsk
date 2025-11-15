@@ -18,11 +18,16 @@ import { ASSESSMENT_QUESTIONS } from '../utils/constants';
 const WorkLifeBalanceQuestion = lazy(() => import('../components/assessment/questions/WorkLifeBalanceQuestion'));
 const ProfessionalGoalsQuestion = lazy(() => import('../components/assessment/questions/ProfessionalGoalsQuestion'));
 const PerfectWorkQuestion = lazy(() => import('../components/assessment/questions/PerfectWorkQuestion'));
+const RelaxAbilityQuestion = lazy(() => import('../components/assessment/questions/RelaxAbilityQuestion'));
+const TimeCostsQuestion = lazy(() => import('../components/assessment/questions/TimeCostsQuestion'));
+
 
 const COMPONENT_MAP = {
     ProfessionalGoalsQuestion,
     PerfectWorkQuestion,
+    RelaxAbilityQuestion,
     WorkLifeBalanceQuestion,
+    TimeCostsQuestion,
 };
 
 const Assessment = () => {

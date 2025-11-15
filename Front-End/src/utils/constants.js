@@ -35,8 +35,9 @@ export const ASSESSMENT_QUESTIONS = [
         //VB
         id: 4,
         text: 'Сколько времени и сил Вы посвещаете работе?',
-        subtitle: '',
+        subtitle: 'Покажите на часах, поворачивая часовую стрелку, сколько времени вы готовы посвящать работе',
         category: 'professional_activity',
+        component: 'TimeCostsQuestion'
     },
     {
         //RT
