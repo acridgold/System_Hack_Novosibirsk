@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
-import { MOCK_USER } from '../../utils/mockUser';
+import { MOCK_USER, MOCK_MANAGER } from '../../utils/mockUser';
+
 
 // Регистрация пользователя
 export const registerUser = createAsyncThunk(
@@ -49,6 +50,19 @@ export const loginUser = createAsyncThunk(
                 return {
                     token: 'mock-token-12345',
                     user: MOCK_USER,
+                };
+            }
+
+            // MOCK менеджер
+            if (
+                credentials.email === 'manager@cdek.ru' &&
+                credentials.password === 'manager123'
+            ) {
+                await new Promise((resolve) => setTimeout(resolve, 800));
+                localStorage.setItem('token', 'mock-token-manager');
+                return {
+                    token: 'mock-token-manager',
+                    user: MOCK_MANAGER,
                 };
             }
 
