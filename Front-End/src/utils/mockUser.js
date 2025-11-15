@@ -106,6 +106,7 @@ export const MOCK_RECOMMENDATIONS = [
         priority: 'high',
         duration: '10 мин/день',
         completed: true,
+        link: "https://habr.com/ru/articles/452966/?utm_source=chatgpt.com",
     },
     {
         id: 2,
@@ -115,6 +116,7 @@ export const MOCK_RECOMMENDATIONS = [
         priority: 'high',
         duration: '30 мин циклы',
         completed: true,
+        link: "https://www.unisender.com/ru/blog/pomodoro-metod-i-tekhnika-tajm-menedzhmenta/?utm_source=chatgpt.com",
     },
     {
         id: 3,
@@ -124,6 +126,7 @@ export const MOCK_RECOMMENDATIONS = [
         priority: 'medium',
         duration: '3 раза/неделю',
         completed: false,
+        link: "https://habr.com/ru/companies/sportmaster_lab/articles/663628/?utm_source=chatgpt.com",
     },
     {
         id: 4,
@@ -133,6 +136,7 @@ export const MOCK_RECOMMENDATIONS = [
         priority: 'high',
         duration: 'Ежедневно',
         completed: true,
+        link: "https://habr.com/ru/articles/792600/?utm_source=chatgpt.com"
     },
     {
         id: 5,
@@ -142,6 +146,7 @@ export const MOCK_RECOMMENDATIONS = [
         priority: 'medium',
         duration: 'Постоянно',
         completed: false,
+        link: "https://habr.com/ru/articles/721796/?utm_source=chatgpt.com",
     },
     {
         id: 6,
@@ -151,6 +156,7 @@ export const MOCK_RECOMMENDATIONS = [
         priority: 'high',
         duration: '2-3 раза/неделю',
         completed: false,
+        link: "https://www.youtube.com/watch?v=-L7vxOtDheU&utm_source=chatgpt.com",
     },
 ];
 

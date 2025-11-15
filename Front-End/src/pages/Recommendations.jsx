@@ -459,7 +459,12 @@ const Recommendations = () => {
                                         size="small"
                                         variant="outlined"
                                     />
-                                    <Button size="small" endIcon={<ArrowForward />} sx={{ color: tip.color }}>
+                                    <Button
+                                        size="small"
+                                        endIcon={<ArrowForward />}
+                                        sx={{ color: tip.color }}
+                                        onClick={() => tip.link && navigate(tip.link)}
+                                    >
                                         Подробнее
                                     </Button>
                                 </Box>
