@@ -32,9 +32,6 @@ app_logger.info("CORS инициализирован")
 jwt = JWTManager(app)
 app_logger.info("JWT инициализирован")
 
-# Импортируем ORM модели
-from routes.db.db_models import User, Assessment, Recommendation, Metric, OldUser
-
 # Импортируем blueprints с роутами
 from routes.auth import auth_bp
 from routes.assessment import assessment_bp

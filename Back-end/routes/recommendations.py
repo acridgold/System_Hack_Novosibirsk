@@ -1,10 +1,10 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from db.db_models import Recommendation, User
-from db.database import db
+from .db.db_models import Recommendation, User
+from .db.database import db
 
 # Импортируем логгер
-from data.logger import recommendations_logger
+from .data.logger import recommendations_logger
 
 recommendations_bp = Blueprint('recommendations', __name__)
 

@@ -1,7 +1,7 @@
 """
 ORM модели для SQLAlchemy
 """
-from database import db
+from .database import db
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship

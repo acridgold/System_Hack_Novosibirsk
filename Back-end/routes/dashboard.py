@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from db.db_models import Metric, Assessment, User
+from .db.db_models import Metric, Assessment, User
 
 # Импортируем логгер
-from data.logger import dashboard_logger
+from .data.logger import dashboard_logger
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
