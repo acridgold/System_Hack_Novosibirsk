@@ -1,12 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime
-from .db_models import Assessment, User
-from database import db
-from .models import ASSESSMENT_QUESTIONS
+from db.db_models import Assessment, User
+from db.database import db
 
 # Импортируем логгер
-from logger import assessment_logger
+from data.logger import assessment_logger
 
 assessment_bp = Blueprint('assessment', __name__)
 

@@ -1,11 +1,10 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-import os
 
-from logger import app_logger
-from config import get_config
-from database import init_db, db
+from routes.data.logger import app_logger
+from routes.data.config import get_config
+from routes.db.database import init_db
 
 app_logger.info("=" * 50)
 app_logger.info("Запуск приложения Flask")
@@ -34,7 +33,7 @@ jwt = JWTManager(app)
 app_logger.info("JWT инициализирован")
 
 # Импортируем ORM модели
-from routes.db_models import User, Assessment, Recommendation, Metric, OldUser
+from routes.db.db_models import User, Assessment, Recommendation, Metric, OldUser
 
 # Импортируем blueprints с роутами
 from routes.auth import auth_bp
