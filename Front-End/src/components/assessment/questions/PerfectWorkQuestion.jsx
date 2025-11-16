@@ -2,10 +2,9 @@ import React, { useState, useCallback } from 'react';
 import { 
     Typography, 
     Box, 
-    Paper,
-    Fade
+    Paper
 } from '@mui/material';
-import { Check, TrendingUp } from '@mui/icons-material';
+import { Check } from '@mui/icons-material';
 
 const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
     const [localValue, setLocalValue] = useState(currentAnswer !== undefined ? currentAnswer : 0);
@@ -24,7 +23,6 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
         
         setCheckedTasks(newCheckedTasks);
         
-        // Считаем количество отмеченных задач
         const checkedCount = newCheckedTasks.filter(Boolean).length;
         const newValue = checkedCountToValue(checkedCount);
         
@@ -52,10 +50,8 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
                 flexDirection: 'column',
             }}
         >
-
-            {/* Основной контейнер с задачами и шкалой */}
             <Box sx={{ display: 'flex', gap: 2, flex: 1, position: 'relative', zIndex: 1 }}>
-                {/* Контейнер с задачами с фоновым изображением */}
+                {/* Контейнер с задачами */}
                 <Box
                     sx={{
                         flex: 1,
@@ -68,7 +64,6 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
                         justifyContent: 'center',
                     }}
                 >
-                    {/* Контейнер для задач с позиционированием поверх изображения */}
                     <Box
                         sx={{
                             display: 'flex',
@@ -106,9 +101,8 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 }}
                                 onClick={() => handleTaskToggle(task.id)}
                             >
-                                {/* Упрощенный текст задания - только полосочки */}
+                                {/* Имитация строк текста */}
                                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                    {/* Имитация строк текста */}
                                     <Box
                                         sx={{
                                             height: '6px',
@@ -199,8 +193,6 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
                         textAlign: 'center'
                     }}
                 >
-
-                    {/* Вертикальная шкала прогресса с текстом */}
                     <Box
                         sx={{
                             flex: 1,
@@ -211,7 +203,6 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
                             width: '100%',
                         }}
                     >
-                        {/* Текст вверху шкалы */}
                         <Typography 
                             variant="body2" 
                             fontWeight="bold" 
@@ -233,7 +224,6 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 border: '1px solid #BDBDBD',
                             }}
                         >
-                            {/* Заполнение прогресса */}
                             <Box
                                 sx={{
                                     position: 'absolute',
@@ -248,7 +238,6 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
                             />
                         </Box>
 
-                        {/* Текст внизу шкалы */}
                         <Typography 
                             variant="body2" 
                             fontWeight="bold" 
@@ -258,7 +247,6 @@ const PerfectWorkQuestion = ({ question, currentAnswer, onAnswer }) => {
                             Меня устраивает любой результат
                         </Typography>
                     </Box>
-
                 </Paper>
             </Box>
         </Paper>
