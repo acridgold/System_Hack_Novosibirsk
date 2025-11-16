@@ -75,5 +75,6 @@ def health():
     return jsonify({'status': 'ok'}), 200
 
 if __name__ == '__main__':
+    # Запускаем на 0.0.0.0:8000 чтобы совпадать с ожиданиями фронтенда (VITE_API_URL по умолчанию http://localhost:8000)
     app_logger.info("Запуск Flask на http://0.0.0.0:8000")
-    app.run(host='localhost', port=5555, debug=False)
+    app.run(host='0.0.0.0', port=8000, debug=False)

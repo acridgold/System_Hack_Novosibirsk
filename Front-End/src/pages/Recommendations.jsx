@@ -296,18 +296,20 @@ const Recommendations = () => {
                                     height: '100%',
                                     borderLeft: `6px solid ${tip.color}`,
                                     opacity: completed[tip.id] ? 0.7 : 1,
-                                    position: 'relative',
+                                    // mobile friendly
+                                    maxWidth: '100%',
+                                    overflow: 'hidden',
                                 }}
                             >
                                 <CardContent sx={{ p: 3 }}>
                                     {/* Header */}
                                     <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                                         <Box display="flex" alignItems="center" gap={1}>
-                                            <Avatar sx={{ bgcolor: tip.color, width: 48, height: 48 }}>
+                                            <Avatar sx={{ bgcolor: tip.color, width: { xs: 40, sm: 48 }, height: { xs: 40, sm: 48 } }}>
                                                 {tip.icon}
                                             </Avatar>
-                                            <div>
-                                                <Typography variant="caption" color="text.secondary" display="block">
+                                            <div style={{ maxWidth: 'calc(100% - 64px)', overflow: 'hidden' }}>
+                                                <Typography variant="caption" color="text.secondary" display="block" noWrap>
                                                     {tip.category}
                                                 </Typography>
                                             </div>
@@ -325,10 +327,10 @@ const Recommendations = () => {
                                     </Box>
 
                                     {/* Content */}
-                                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                    <Typography variant="h6" fontWeight="bold" gutterBottom noWrap sx={{ textOverflow: 'ellipsis' }}>
                                         {tip.title}
                                     </Typography>
-                                    <Typography variant="body2" color="text.secondary" paragraph>
+                                    <Typography variant="body2" color="text.secondary" paragraph sx={{ overflowWrap: 'anywhere' }}>
                                         {tip.description}
                                     </Typography>
 

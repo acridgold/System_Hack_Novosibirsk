@@ -33,16 +33,33 @@ export const submitAssessment = createAsyncThunk(
             // }
 
             // ===== РЕАЛЬНЫЕ ПОЛЬЗОВАТЕЛИ =====
-            if (user?.id) {
-                // Backend автоматически берет user_id из JWT
-                const data = await api.post('/assessment/submit', payload);
+            const token = localStorage.getItem('token');
+            // Если есть токен — пробуем отправить на backend (иногда user еще не загружен, но токен есть)
+            if (token) {
+                console.info('submitAssessment: sending to backend', { user, payload, tokenExists: !!token });
+                try {
+                    // Backend автоматически берет user_id из JWT
+                    const data = await api.post('/assessment/submit', payload);
+                    console.info('submitAssessment: backend response', data);
 
-                // Добавляем date если Backend не вернул
-                if (data.timestamp && !data.date) {
-                    data.date = data.timestamp.split('T')[0];
+                    // Добавляем date если Backend не вернул
+                    if (data.timestamp && !data.date) {
+                        data.date = data.timestamp.split('T')[0];
+                    }
+
+                    return data;
+                } catch (err) {
+                    console.error('submitAssessment: error sending to backend', err);
+                    // В случае ошибки при отправке — откатываемся к локальному результату
+                    const results = calculateResults(answers);
+                    return {
+                        local: true,
+                        ...results,
+                        timestamp: payload.timestamp,
+                        date: payload.timestamp.split('T')[0],
+                        _error: err.message,
+                    };
                 }
-
-                return data;
             } else {
                 // Не авторизован - локальные результаты
                 const results = calculateResults(answers);

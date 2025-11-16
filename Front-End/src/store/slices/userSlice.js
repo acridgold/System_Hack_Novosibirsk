@@ -91,7 +91,10 @@ export const loginUser = createAsyncThunk(
 
             const userData = await api.get('/auth/me');
 
-            return { token: data.access_token, user: userData };
+            // Normalize userData: backend may return { user: { ... } } or user object directly
+            const normalizedUser = (userData && userData.user) ? userData.user : userData;
+
+            return { token: data.access_token, user: normalizedUser };
         } catch (error) {
             return rejectWithValue(error.message);
         }
@@ -146,7 +149,14 @@ const userSlice = createSlice({
                 state.loading = true;
             })
             .addCase(checkAuth.fulfilled, (state, action) => {
-                state.user = action.payload;
+                // Backend /auth/verify может вернуть { valid: true, user_id: ..., user: { ... } }
+                // Но в mock случае checkAuth возвращяет напрямую MOCK_USER.
+                const payload = action.payload;
+                if (payload && payload.user) {
+                    state.user = payload.user;
+                } else {
+                    state.user = payload;
+                }
                 state.isAuthenticated = true;
                 state.loading = false;
             })

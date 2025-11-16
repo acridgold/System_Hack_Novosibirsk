@@ -28,8 +28,18 @@ class ApiService {
             },
         };
 
+        // Debug log: show outgoing request (no body logging for privacy)
+        try {
+            console.info('API Request:', { url, method: config.method || 'GET', headers: config.headers });
+        } catch (e) {
+            // ignore logging errors
+        }
+
         try {
             const response = await fetch(url, config);
+
+            // Debug: status
+            console.info('API Response status:', response.status, 'for', url);
 
             // Обработка ошибок авторизации
             if (response.status === 401) {
@@ -46,6 +56,7 @@ class ApiService {
 
             // FastAPI возвращает JSON по умолчанию
             const data = await response.json();
+            console.info('API Response JSON:', data);
             return data;
         } catch (error) {
             console.error(`API Error [${endpoint}]:`, error);

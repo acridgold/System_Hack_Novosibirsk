@@ -8,4 +8,52 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     background-color: #f9f9f9;
     color: #333;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Общие адаптивные правила */
+img, svg, video, iframe {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Предотвращаем горизонтальную прокрутку */
+html, body, #root {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Карточки и контейнеры */
+.MuiPaper-root, .MuiCard-root {
+    word-break: break-word;
+}
+
+/* Кнопки на мобильных — занимают всю ширину при малых экранах */
+@media (max-width: 600px) {
+    .MuiButton-root {
+        width: 100% !important;
+    }
+
+    .MuiContainer-root {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+}
+
+/* Уменьшаем пространства на мобильных */
+@media (max-width: 420px) {
+    .MuiTypography-h4 {
+        font-size: 1.25rem;
+    }
+    .MuiTypography-h5 {
+        font-size: 1rem;
+    }
+}
+
+/* Утилита: чтобы элементы не выходили за границы */
+.responsive-wrap {
+    max-width: 100%;
+    overflow-wrap: break-word;
 }
