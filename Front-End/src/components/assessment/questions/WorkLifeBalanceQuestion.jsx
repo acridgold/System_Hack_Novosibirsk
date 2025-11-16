@@ -14,13 +14,11 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
 
     // Преобразование значения 0-1 в угол наклона коромысла (в градусах)
     const getBeamRotation = (value) => {
-        // value: 0-1 -> угол: -15° до +15°
         return (value - 0.5) * -30; // 0.5 -> 0°, 0 -> -15°, 1 -> +15°
     };
 
     const beamRotation = getBeamRotation(localValue);
 
-    // Обработчик начала перетаскивания
     const handleMouseDown = useCallback((bowlType, event) => {
         setIsDragging(true);
         setActiveBowl(bowlType);
@@ -29,23 +27,19 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
         event.preventDefault();
     }, [localValue]);
 
-    // Обработчик движения
     const handleMouseMove = useCallback((event) => {
         if (!isDragging) return;
 
         const currentY = event.clientY || (event.touches && event.touches[0].clientY);
         const deltaY = currentY - startYRef.current;
         
-        // Чувствительность: 100px движения = изменение на 0.5 единицы
         const sensitivity = 100;
         const deltaValue = (deltaY / sensitivity) * 0.5;
 
         let newValue;
         if (activeBowl === 'work') {
-            // Тянем рабочую чашу вниз -> увеличиваем значение
             newValue = startValueRef.current + deltaValue;
         } else {
-            // Тянем жизненную чашу вниз -> уменьшаем значение
             newValue = startValueRef.current - deltaValue;
         }
 
@@ -55,13 +49,11 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
         onAnswer(newValue);
     }, [isDragging, activeBowl, onAnswer]);
 
-    // Обработчик окончания перетаскивания
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
         setActiveBowl(null);
     }, []);
 
-    // Глобальные обработчики событий
     useEffect(() => {
         if (isDragging) {
             document.addEventListener('mousemove', handleMouseMove);
@@ -81,19 +73,16 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
     // ИНВЕРТИРОВАННЫЙ расчет заполнения шкалы
     const getScaleFill = (value) => {
         if (value < 0.5) {
-            // Перевес в сторону жизни - заполняется ПРАВАЯ часть
             return {
                 left: 0,
-                right: ((0.5 - value) / 0.5) * 100 // 0-100%
+                right: ((0.5 - value) / 0.5) * 100
             };
         } else if (value > 0.5) {
-            // Перевес в сторону работы - заполняется ЛЕВАЯ часть
             return {
-                left: ((value - 0.5) / 0.5) * 100, // 0-100%
+                left: ((value - 0.5) / 0.5) * 100,
                 right: 0
             };
         } else {
-            // Баланс - обе части пустые
             return {
                 left: 0,
                 right: 0
@@ -116,14 +105,9 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                 flexDirection: 'column',
             }}
         >
-
-            {/* Контейнер с весами - УВЕЛИЧЕН */}
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, mb: 1 }}>
-
-                {/* Весы с изображениями - УВЕЛИЧЕНЫ */}
                 <Box sx={{ position: 'relative', width: '400px', height: '300px' }}>
                     
-                    {/* Основание весов (неподвижная часть) - УВЕЛИЧЕНО */}
                     <Box
                         component="img"
                         src="questionsAssets/WorkLifeBalanceQuestion/scalesBase.png"
@@ -133,33 +117,30 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                             bottom: 0,
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            width: '280px', // Увеличено
+                            width: '280px',
                             zIndex: 1,
                         }}
                     />
 
-                    {/* Коромысло с чашами (вращающаяся часть) - УВЕЛИЧЕНО */}
                     <Box sx={{
                         position: 'absolute',
-                        top: '60px', // Скорректировано
+                        top: '60px',
                         left: '50%',
                         transform: `translateX(-50%) rotate(${beamRotation}deg)`,
-                        transformOrigin: 'center 35px', // Скорректировано
+                        transformOrigin: 'center 35px',
                         transition: 'transform 0.1s ease',
                         zIndex: 2,
                     }}>
                         
-                        {/* Изображение коромысла - УВЕЛИЧЕНО */}
                         <Box
                             component="img"
                             src="questionsAssets/WorkLifeBalanceQuestion/scalesRotate.png"
                             alt="Коромысло весов"
                             sx={{
-                                width: '280px', // Увеличено
+                                width: '280px',
                             }}
                         />
 
-                        {/* Левая чаша - Работа - УВЕЛИЧЕНА */}
                         <Box
                             component="img"
                             src="questionsAssets/WorkLifeBalanceQuestion/leftBowl.png"
@@ -168,9 +149,9 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                             onTouchStart={(e) => handleMouseDown('work', e)}
                             sx={{
                                 position: 'absolute',
-                                top: '55px', // Скорректировано
-                                left: '-20px', // Скорректировано
-                                width: '100px', // Увеличено
+                                top: '55px',
+                                left: '-20px',
+                                width: '100px',
                                 transform: `rotate(${-beamRotation}deg)`,
                                 cursor: isDragging && activeBowl === 'work' ? 'grabbing' : 'grab',
                                 filter: localValue > 0.5 ? `drop-shadow(0 0 5px #4CAF50)` : 'none',
@@ -178,7 +159,6 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                             }}
                         />
 
-                        {/* Правая чаша - Жизнь - УВЕЛИЧЕНА */}
                         <Box
                             component="img"
                             src="questionsAssets/WorkLifeBalanceQuestion/rightBowl.png"
@@ -187,9 +167,9 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                             onTouchStart={(e) => handleMouseDown('life', e)}
                             sx={{
                                 position: 'absolute',
-                                top: '55px', // Скорректировано
-                                right: '-20px', // Скорректировано
-                                width: '100px', // Увеличено
+                                top: '55px',
+                                right: '-20px',
+                                width: '100px',
                                 transform: `rotate(${-beamRotation}deg)`,
                                 cursor: isDragging && activeBowl === 'life' ? 'grabbing' : 'grab',
                                 filter: localValue < 0.5 ? `drop-shadow(0 0 5px #4CAF50)` : 'none',
@@ -203,33 +183,28 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
 
             </Box>
 
-            {/* Новая шкала баланса - ПОНИЖЕНА */}
-            <Box sx={{ mt: 2, px: 2 }}> {/* Уменьшен отступ сверху */}
-                
-                {/* Контейнер шкалы */}
+            <Box sx={{ mt: 2, px: 2 }}>
                 <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: 2, 
-                    mt: 1, // Уменьшен отступ
+                    mt: 1,
                     position: 'relative'
                 }}>
-                    {/* Левая часть шкалы (Работа) - ИНВЕРТИРОВАНА */}
                     <Box sx={{ flexGrow: 1, position: 'relative' }}>
                         <Box sx={{
-                            height: 12, // Уменьшена высота
+                            height: 12,
                             borderRadius: '8px 0 0 8px',
                             backgroundColor: '#E0E0E0',
                             position: 'relative',
                             overflow: 'hidden'
                         }}>
-                            {/* Заполнение левой части - ИНВЕРТИРОВАНА */}
                             <Box sx={{
                                 position: 'absolute',
                                 right: 0,
                                 top: 0,
                                 height: '100%',
-                                width: `${scaleFill.left}%`, // Теперь для работы
+                                width: `${scaleFill.left}%`,
                                 backgroundColor: '#4CAF50',
                                 transition: 'width 0.1s ease',
                                 borderRadius: scaleFill.left === 100 ? '8px 0 0 8px' : '0'
@@ -240,7 +215,6 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                         </Typography>
                     </Box>
 
-                    {/* Центральный индикатор баланса */}
                     <Box sx={{ 
                         position: 'relative',
                         display: 'flex',
@@ -249,8 +223,8 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                         minWidth: '60px'
                     }}>
                         <Box sx={{
-                            width: 3, // Уменьшена ширина
-                            height: 20, // Уменьшена высота
+                            width: 3,
+                            height: 20,
                             backgroundColor: '#E0E0E0',
                             borderRadius: 2,
                             mb: 0.5
@@ -260,22 +234,20 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                         </Typography>
                     </Box>
 
-                    {/* Правая часть шкалы (Жизнь) - ИНВЕРТИРОВАНА */}
                     <Box sx={{ flexGrow: 1, position: 'relative' }}>
                         <Box sx={{
-                            height: 12, // Уменьшена высота
+                            height: 12,
                             borderRadius: '0 8px 8px 0',
                             backgroundColor: '#E0E0E0',
                             position: 'relative',
                             overflow: 'hidden'
                         }}>
-                            {/* Заполнение правой части - ИНВЕРТИРОВАНА */}
                             <Box sx={{
                                 position: 'absolute',
                                 left: 0,
                                 top: 0,
                                 height: '100%',
-                                width: `${scaleFill.right}%`, // Теперь для жизни
+                                width: `${scaleFill.right}%`,
                                 backgroundColor: '#4CAF50',
                                 transition: 'width 0.1s ease',
                                 borderRadius: scaleFill.right === 100 ? '0 8px 8px 0' : '0'
@@ -286,9 +258,7 @@ const WorkLifeBalanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                         </Typography>
                     </Box>
                 </Box>
-
             </Box>
-
         </Paper>
     );
 };

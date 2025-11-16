@@ -5,9 +5,9 @@ import {
     Paper,
     Fade
 } from '@mui/material';
-import { TrendingFlat, ArrowLeft, ArrowRight } from '@mui/icons-material';
+import { TrendingFlat } from '@mui/icons-material';
 
-const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
+const RelaxAbilityQuestion = ({ currentAnswer, onAnswer }) => {
     const [localValue, setLocalValue] = useState(currentAnswer !== undefined ? currentAnswer : 0.5);
     const [isDragging, setIsDragging] = useState(false);
     const [loadedFrames, setLoadedFrames] = useState({});
@@ -19,23 +19,17 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
     const containerRef = useRef(null);
     const objectRef = useRef(null);
 
-    const totalFrames = 3; // Количество кадров анимации
-    const minValue = 0;
-    const maxValue = 1;
-
-    // Генерация путей к кадрам анимации
+    const totalFrames = 3;
     const frames = Array.from({ length: totalFrames }, (_, i) => 
         `/questionsAssets/RelaxAbilityQuestion/animation/${(i + 1).toString().padStart(4, '0')}.png`
     );
 
-    // Преобразование значения 0-1 в кадр анимации
     const valueToFrame = (value) => {
         return Math.min(Math.floor(value * totalFrames), totalFrames - 1);
     };
 
     const currentFrame = valueToFrame(localValue);
 
-    // Предзагрузка изображений
     useEffect(() => {
         const loadImages = async () => {
             setIsLoading(true);
@@ -47,8 +41,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                         resolve();
                     };
                     img.onerror = () => {
-                        console.warn(`Failed to load frame: ${framePath}`);
-                        // Создаем fallback градиент вместо изображения
                         setLoadedFrames(prev => ({ ...prev, [index]: 'fallback' }));
                         resolve();
                     };
@@ -56,7 +48,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                 });
             });
 
-            // Предзагрузка изображений для крайних позиций
             const workImg = new Image();
             workImg.onload = () => setEdgeImagesLoaded(prev => ({ ...prev, work: true }));
             workImg.src = "/questionsAssets/RelaxAbilityQuestion/work_pic.png";
@@ -72,48 +63,39 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
         loadImages();
     }, []);
 
-    // Вычисление позиции объекта по горизонтали с учетом границ
     const getObjectPositionX = (value, containerWidth, objectWidth) => {
         const percentage = value * 100;
-        // Ограничиваем позицию так, чтобы объект не выходил за границы контейнера
         const objectWidthPercent = (objectWidth / containerWidth) * 100 / 2;
         const boundedPercentage = Math.max(0 + objectWidthPercent, Math.min(100 - objectWidthPercent, percentage));
         return `${boundedPercentage}%`;
     };
 
-    // Вычисление вертикального смещения для дуги (опущена ниже)
     const getArcOffset = (value) => {
-        // Опускаем кривую ниже - уменьшаем амплитуду
-        return -100 * Math.sin(value * Math.PI) - 20; // Опущено ниже
+        return -100 * Math.sin(value * Math.PI) - 20;
     };
 
-    // Получение точек для кривой Безье (опущена ниже)
     const getCurvePoints = (containerWidth = 400) => {
-        const startX = containerWidth * 0.1; // 10% от ширины контейнера
-        const endX = containerWidth * 0.9;   // 90% от ширины контейнера
-        const startY = 320; // Нижняя точка кривой (опущена ниже)
-        const controlY = 80; // Верхняя контрольная точка (опущена ниже)
-        const controlX = containerWidth / 2; // Центр по горизонтали
+        const startX = containerWidth * 0.1;
+        const endX = containerWidth * 0.9;
+        const startY = 320;
+        const controlY = 80;
+        const controlX = containerWidth / 2;
         
         return `M ${startX},${startY} Q ${controlX},${controlY} ${endX},${startY}`;
     };
 
-    // Расчет заполнения шкалы как в WorkLifeBalanceQuestion
     const getScaleFill = (value) => {
         if (value < 0.5) {
-            // Перевес в сторону "постоянно думаю о работе" - заполняется ЛЕВАЯ часть
             return {
-                left: ((0.5 - value) / 0.5) * 100, // 0-100%
+                left: ((0.5 - value) / 0.5) * 100,
                 right: 0
             };
         } else if (value > 0.5) {
-            // Перевес в сторону "забываю о работе" - заполняется ПРАВАЯ часть
             return {
                 left: 0,
-                right: ((value - 0.5) / 0.5) * 100 // 0-100%
+                right: ((value - 0.5) / 0.5) * 100
             };
         } else {
-            // Баланс - обе части пустые
             return {
                 left: 0,
                 right: 0
@@ -128,18 +110,14 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
     const [curvePath, setCurvePath] = useState('');
     const scaleFill = getScaleFill(localValue);
 
-    // Обновление позиции объекта и кривой
     useEffect(() => {
         const updatePositions = () => {
             if (containerRef.current && objectRef.current) {
                 const containerWidth = containerRef.current.offsetWidth;
-                const containerHeight = containerRef.current.offsetHeight;
                 const objectWidth = objectRef.current.offsetWidth;
                 
-                // Обновляем кривую
                 setCurvePath(getCurvePoints(containerWidth));
                 
-                // Вычисляем позицию объекта с учетом границ
                 const xPosition = getObjectPositionX(localValue, containerWidth, objectWidth);
                 const arcOffset = getArcOffset(localValue);
                 const yPosition = `calc(50% + ${arcOffset}px)`;
@@ -159,14 +137,12 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
         };
     }, [localValue]);
 
-    // Обработчик начала перетаскивания
     const handleMouseDown = useCallback((event) => {
         setIsDragging(true);
         updateValueFromEvent(event);
         event.preventDefault();
     }, []);
 
-    // Обновление значения из события с учетом границ
     const updateValueFromEvent = useCallback((event) => {
         if (!containerRef.current || !objectRef.current) return;
 
@@ -177,7 +153,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
         if (!clientX) return;
 
         const relativeX = clientX - rect.left;
-        // Учитываем половину ширины объекта для корректного позиционирования центра
         const objectHalfWidth = objectRect.width / 2;
         const adjustedX = Math.max(objectHalfWidth, Math.min(rect.width - objectHalfWidth, relativeX));
         const percentage = Math.max(0, Math.min(1, (adjustedX - objectHalfWidth) / (rect.width - objectRect.width)));
@@ -187,23 +162,19 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
         onAnswer(newValue);
     }, [onAnswer]);
 
-    // Обработчик движения
     const handleMouseMove = useCallback((event) => {
         if (!isDragging) return;
         updateValueFromEvent(event);
     }, [isDragging, updateValueFromEvent]);
 
-    // Обработчик окончания перетаскивания
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
     }, []);
 
-    // Обработчик клика по треку
     const handleTrackClick = useCallback((event) => {
         updateValueFromEvent(event);
     }, [updateValueFromEvent]);
 
-    // Глобальные обработчики событий
     useEffect(() => {
         if (isDragging) {
             document.addEventListener('mousemove', handleMouseMove);
@@ -229,22 +200,18 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                 background: '#FFFFFF',
                 position: 'relative',
                 overflow: 'hidden',
-                minHeight: '600px', // Еще уменьшена высота
+                minHeight: '600px',
                 display: 'flex',
                 flexDirection: 'column',
             }}
         >
-
-            {/* Контейнер с слайдером */}
             <Box sx={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
-                gap: 0, // Убраны все промежутки
+                gap: 0,
                 alignItems: 'center', 
                 flex: 1,
             }}>
-
-                {/* Контейнер для трека и объекта */}
                 <Box
                     ref={containerRef}
                     sx={{
@@ -252,11 +219,10 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                         width: '100%',
                         cursor: isDragging ? 'grabbing' : 'pointer',
                         flex: 1,
-                        mt: 0 // Убран отступ сверху
+                        mt: 0
                     }}
                     onClick={handleTrackClick}
                 >
-                    {/* Полупрозрачная черная кривая линия */}
                     <svg
                         width="100%"
                         height="100%"
@@ -276,11 +242,10 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                         />
                     </svg>
 
-                    {/* Крайние позиции с изображениями - подняты еще выше */}
                     <Box
                         sx={{
                             position: 'absolute',
-                            bottom: '60px', // Поднято еще выше
+                            bottom: '60px',
                             left: '2%',
                             textAlign: 'center',
                             display: 'flex',
@@ -289,7 +254,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                             gap: 1,
                         }}
                     >
-                        {/* Изображение для позиции A */}
                         <Box
                             sx={{
                                 width: '180px',
@@ -332,7 +296,7 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                     <Box
                         sx={{
                             position: 'absolute',
-                            bottom: '60px', // Поднято еще выше
+                            bottom: '60px',
                             right: '2%',
                             textAlign: 'center',
                             display: 'flex',
@@ -341,7 +305,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                             gap: 1,
                         }}
                     >
-                        {/* Изображение для позиции B */}
                         <Box
                             sx={{
                                 width: '220px',
@@ -381,7 +344,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                         </Box>
                     </Box>
 
-                    {/* Перемещаемый объект */}
                     <Box
                         ref={objectRef}
                         onMouseDown={handleMouseDown}
@@ -401,7 +363,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                         }}
                     >
                         {isLoading ? (
-                            // Загрузка
                             <Box
                                 sx={{
                                     width: '100%',
@@ -416,7 +377,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 <TrendingFlat sx={{ color: '#757575', fontSize: 32 }} />
                             </Box>
                         ) : (
-                            // Анимированный объект
                             <Fade in={!isLoading} timeout={300}>
                                 <Box
                                     sx={{
@@ -439,7 +399,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                                             }}
                                         />
                                     ) : (
-                                        // Fallback когда изображения не загружены
                                         <Box
                                             sx={{
                                                 width: '100%',
@@ -462,27 +421,22 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                             </Fade>
                         )}
                     </Box>
-
                 </Box>
 
-                {/* Шкала - поднята вплотную к объектам */}
                 <Box sx={{ 
-                    mt: 0, // Убран отступ сверху
+                    mt: 0,
                     px: 2, 
                     width: '100%', 
                     maxWidth: '600px', 
-                    mb: 5 // Уменьшен отступ снизу
+                    mb: 5
                 }}>
-                    
-                    {/* Контейнер шкалы */}
                     <Box sx={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: 2, 
-                        mt: 0, // Убран отступ сверху
+                        mt: 0,
                         position: 'relative'
                     }}>
-                        {/* Левая часть шкалы (Постоянно думаю о работе) */}
                         <Box sx={{ flexGrow: 1, position: 'relative' }}>
                             <Box sx={{
                                 height: 12,
@@ -491,7 +445,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 position: 'relative',
                                 overflow: 'hidden'
                             }}>
-                                {/* Заполнение левой части */}
                                 <Box sx={{
                                     position: 'absolute',
                                     right: 0,
@@ -508,7 +461,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                             </Typography>
                         </Box>
 
-                        {/* Центральный индикатор баланса */}
                         <Box sx={{ 
                             position: 'relative',
                             display: 'flex',
@@ -525,7 +477,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                             }} />
                         </Box>
 
-                        {/* Правая часть шкалы (Забываю о работе) */}
                         <Box sx={{ flexGrow: 1, position: 'relative' }}>
                             <Box sx={{
                                 height: 12,
@@ -534,7 +485,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 position: 'relative',
                                 overflow: 'hidden'
                             }}>
-                                {/* Заполнение правой части */}
                                 <Box sx={{
                                     position: 'absolute',
                                     left: 0,
@@ -552,7 +502,6 @@ const RelaxAbilityQuestion = ({ question, currentAnswer, onAnswer }) => {
                         </Box>
                     </Box>
                 </Box>
-                
             </Box>
         </Paper>
     );

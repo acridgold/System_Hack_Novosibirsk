@@ -1,38 +1,32 @@
-import React, { useState, useCallback, useRef } from 'react'; 
+import React, { useState, useCallback, useRef, useEffect } from 'react'; 
 import { 
     Typography, 
     Box, 
     Paper 
 } from '@mui/material'; 
 
-const StressResistanceQuestion = ({ question, currentAnswer, onAnswer }) => {
+const StressResistanceQuestion = ({ currentAnswer, onAnswer }) => {
     const [localValue, setLocalValue] = useState(currentAnswer !== undefined ? currentAnswer : 0);
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef(null);
 
-    // Статическое фоновое изображение
     const backgroundImage = "/questionsAssets/StressResistanceQuestion/woman.png";
-
-    // Изображение для движущегося объекта
     const objectImage = "/questionsAssets/StressResistanceQuestion/stress.png";
 
-    // Вычисление позиции движущегося объекта
     const getObjectPosition = (value) => {
-        const minY = 100; // Нижняя позиция (value = 0) - опущена ниже
-        const maxY = 0; // Верхняя позиция (value = 1) - опущена ниже
+        const minY = 100;
+        const maxY = 0;
         return minY + (maxY - minY) * value;
     };
 
     const objectY = getObjectPosition(localValue);
 
-    // Обработчик начала перетаскивания
     const handleMouseDown = useCallback((event) => {
         setIsDragging(true);
         updateValueFromEvent(event);
         event.preventDefault();
     }, []);
 
-    // Обновление значения из события
     const updateValueFromEvent = useCallback((event) => {
         if (!containerRef.current) return;
 
@@ -48,24 +42,20 @@ const StressResistanceQuestion = ({ question, currentAnswer, onAnswer }) => {
         onAnswer(percentage);
     }, [onAnswer]);
 
-    // Обработчик движения
     const handleMouseMove = useCallback((event) => {
         if (!isDragging) return;
         updateValueFromEvent(event);
     }, [isDragging, updateValueFromEvent]);
 
-    // Обработчик окончания перетаскивания
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
     }, []);
 
-    // Обработчик клика по контейнеру (без перетаскивания)
     const handleContainerClick = useCallback((event) => {
         updateValueFromEvent(event);
     }, [updateValueFromEvent]);
 
-    // Глобальные обработчики событий
-    React.useEffect(() => {
+    useEffect(() => {
         if (isDragging) {
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
@@ -81,48 +71,27 @@ const StressResistanceQuestion = ({ question, currentAnswer, onAnswer }) => {
         };
     }, [isDragging, handleMouseMove, handleMouseUp]);
 
-    // Получение цвета в зависимости от значения
-    const getValueColor = (value) => {
-        const hue = 120 * value; // 0° (красный) -> 120° (зеленый)
-        return `hsl(${hue}, 70%, 50%)`;
-    };
-
-    const valueColor = getValueColor(localValue);
-
-    // Получение текста состояния
-    const getStateText = (value) => {
-        if (value < 0.2) return 'Высокий уровень стресса';
-        if (value < 0.4) return 'Повышенный уровень стресса';
-        if (value < 0.6) return 'Умеренный уровень стресса';
-        if (value < 0.8) return 'Низкий уровень стресса';
-        return 'Отличная стрессоустойчивость';
-    };
-
     return (
         <Paper
             elevation={3}
             sx={{
                 p: 4,
                 border: '2px solid #E0EFE5',
-                background: ' #FFFFFF',
+                background: '#FFFFFF',
                 position: 'relative',
                 overflow: 'visible',
-                minHeight: '700px', // Увеличил минимальную высоту
+                minHeight: '700px',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center', // Центрируем по вертикали
+                justifyContent: 'center',
             }}
         >
-
-            {/* Основной контейнер */}
             <Box sx={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'center',
-                marginTop: '80px', // Опускаем весь контент ниже
+                marginTop: '80px',
             }}>
-
-                {/* Контейнер с анимацией */}
                 <Box
                     ref={containerRef}
                     sx={{
@@ -135,15 +104,14 @@ const StressResistanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        marginBottom: '40px', // Добавляем отступ снизу
+                        marginBottom: '40px',
                     }}
                     onClick={handleContainerClick}
                 >
-                    {/* Статическое фоновое изображение - опущено ниже */}
                     <Box
                         sx={{
                             position: 'absolute',
-                            top: '60%', // Опущено ниже
+                            top: '60%',
                             left: '50%',
                             transform: 'translate(-50%, -50%)',
                             width: '400px',
@@ -163,13 +131,11 @@ const StressResistanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 display: 'block',
                             }}
                             onError={(e) => {
-                                // Fallback если изображение не загрузилось
                                 e.target.style.display = 'none';
                             }}
                         />
                     </Box>
 
-                    {/* Движущийся объект в виде изображения */}
                     <Box
                         sx={{
                             position: 'absolute',
@@ -196,18 +162,16 @@ const StressResistanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 display: 'block',
                             }}
                             onError={(e) => {
-                                // Fallback если изображение не загрузилось
                                 e.target.style.display = 'none';
                             }}
                         />
                     </Box>
                 </Box>
                 
-                {/* Шкала прогресса - опущена ниже */}
                 <Box sx={{ 
                     width: '600px', 
-                    mt: 4, // Увеличил отступ сверху
-                    marginBottom: '40px', // Добавил отступ снизу
+                    mt: 4,
+                    marginBottom: '40px',
                 }}>
                     <Box display="flex" justifyContent="space-between" mb={1}>
                         <Typography variant="caption" color="#000000ff" fontWeight="bold" fontSize='1.1rem'>
@@ -231,7 +195,7 @@ const StressResistanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                             sx={{
                                 width: `${localValue * 100}%`,
                                 height: '100%',
-                                background: `#4CAF50`,
+                                background: '#4CAF50',
                                 borderRadius: '4px',
                                 transition: 'width 0.3s ease',
                             }}

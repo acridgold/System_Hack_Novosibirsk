@@ -6,18 +6,16 @@ import {
     LinearProgress
 } from '@mui/material'; 
 
-const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
+const LifeSatisfactionQuestion = ({ currentAnswer, onAnswer }) => {
     const [localValue, setLocalValue] = useState(currentAnswer !== undefined ? currentAnswer : 0.5);
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef(null);
 
-    // Обработчик начала перетаскивания
     const handleMouseDown = useCallback((event) => {
         setIsDragging(true);
         event.preventDefault();
     }, []);
 
-    // Обработчик движения
     const handleMouseMove = useCallback((event) => {
         if (!isDragging || !containerRef.current) return;
 
@@ -26,27 +24,20 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
         
         if (!clientY) return;
 
-        // Вычисляем прогресс на основе положения мыши относительно контейнера
         const containerTop = rect.top;
         const containerHeight = rect.height;
         const mouseY = clientY;
         
-        // Прогресс от 0 до 1 (0 - вверху, 1 - внизу)
         const progress = Math.max(0, Math.min(1, (mouseY - containerTop) / containerHeight));
-        
-        // Тянем вниз - лицо становится веселее (value увеличивается)
-        // Тянем вверх - лицо становится грустнее (value уменьшается)
         const newValue = progress;
         setLocalValue(newValue);
         onAnswer(newValue);
     }, [isDragging, onAnswer]);
 
-    // Обработчик окончания перетаскивания
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
     }, []);
 
-    // Глобальные обработчики событий
     useEffect(() => {
         if (isDragging) {
             document.addEventListener('mousemove', handleMouseMove);
@@ -63,18 +54,12 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
         };
     }, [isDragging, handleMouseMove, handleMouseUp]);
 
-    // Расчет параметров лица на основе значения
     const getFaceParameters = (value) => {
-        // Рот: от грустного (вниз) до счастливого (вверх)
-        const mouthCurvature = -40 + value * 80; // от -40 до +40
-        const mouthY = 180 + (1 - value) * 10; // Положение рта
-        
-        // Брови: грусть - опущены, улыбка - подняты
-        const eyeBrowCurvature = 10 - value * 20; // от +10 до -10
-        const eyeBrowY = 100 - value * 10; // Положение бровей
-        
-        // Глаза: от грустных до веселых
-        const eyeOpenness = 0.7 + value * 0.3; // Открытость глаз
+        const mouthCurvature = -40 + value * 80;
+        const mouthY = 180 + (1 - value) * 10;
+        const eyeBrowCurvature = 10 - value * 20;
+        const eyeBrowY = 100 - value * 10;
+        const eyeOpenness = 0.7 + value * 0.3;
         
         return {
             mouthCurvature,
@@ -86,16 +71,6 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
     };
 
     const faceParams = getFaceParameters(localValue);
-
-    // Получение текста состояния
-    const getStateText = (value) => {
-        if (value === 0) return 'Очень грустно';
-        if (value < 0.2) return 'Грустно';
-        if (value < 0.4) return 'Немного грустно';
-        if (value < 0.6) return 'Нейтрально';
-        if (value < 0.8) return 'Довольно хорошо';
-        return 'Отлично!';
-    };
 
     return (
         <Paper
@@ -113,14 +88,13 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                 height: '100%',
             }}
         >
-            {/* Основной контейнер */}
             <Box 
                 ref={containerRef}
                 sx={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
                     alignItems: 'center',
-                    justifyContent: 'center', // Центрирование по вертикали
+                    justifyContent: 'center',
                     flex: 1,
                     width: '100%',
                     height: '100%',
@@ -130,16 +104,12 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                 onMouseDown={handleMouseDown}
                 onTouchStart={handleMouseDown}
             >
-
-                {/* Информация о состоянии - перемещена выше */}
                 <Box sx={{ 
                     mb: 4, 
                     textAlign: 'center', 
                     width: '100%',
-                    maxWidth: '700px' // Ограничение ширины для лучшего вида
+                    maxWidth: '700px'
                 }}>
-                    
-                    {/* Шкала прогресса */}
                     <Box sx={{ 
                         display: 'flex', 
                         flexDirection: 'column', 
@@ -176,7 +146,6 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                     </Box>
                 </Box>
 
-                {/* Лицо - перемещено ближе к центру */}
                 <Box sx={{ 
                     position: 'relative',
                     width: '600px',
@@ -193,7 +162,6 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                             filter: 'grayscale(100%)',
                         }}
                     >
-                        {/* Голова */}
                         <circle
                             cx="150"
                             cy="150"
@@ -203,7 +171,6 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                             strokeWidth="3"
                         />
                         
-                        {/* Левый глаз */}
                         <ellipse
                             cx="110"
                             cy="120"
@@ -212,7 +179,6 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                             fill="#424242"
                         />
                         
-                        {/* Правый глаз */}
                         <ellipse
                             cx="190"
                             cy="120"
@@ -221,7 +187,6 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                             fill="#424242"
                         />
                         
-                        {/* Левая бровь (опускается при грусти, поднимается при улыбке) */}
                         <path
                             d={`M 90,${faceParams.eyeBrowY} Q 110,${faceParams.eyeBrowY + faceParams.eyeBrowCurvature} 130,${faceParams.eyeBrowY}`}
                             stroke="#424242"
@@ -229,7 +194,6 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                             fill="none"
                         />
                         
-                        {/* Правая бровь (опускается при грусти, поднимается при улыбке) */}
                         <path
                             d={`M 170,${faceParams.eyeBrowY} Q 190,${faceParams.eyeBrowY + faceParams.eyeBrowCurvature} 210,${faceParams.eyeBrowY}`}
                             stroke="#424242"
@@ -237,7 +201,6 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                             fill="none"
                         />
                         
-                        {/* Рот */}
                         <path
                             d={`M 100,${faceParams.mouthY} Q 150,${faceParams.mouthY + faceParams.mouthCurvature} 200,${faceParams.mouthY}`}
                             stroke="#424242"
@@ -245,7 +208,6 @@ const LifeSatisfactionQuestion = ({ question, currentAnswer, onAnswer }) => {
                             fill="none"
                             strokeLinecap="round"
                         />
-                        
                     </svg>
                 </Box>
             </Box>

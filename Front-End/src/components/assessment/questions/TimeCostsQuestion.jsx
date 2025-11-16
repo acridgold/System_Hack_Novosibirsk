@@ -18,9 +18,7 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
     };
 
     const currentAngle = valueToAngle(localValue);
-
-    // Вычисление угла для минутной стрелки
-    const minuteAngle = (localValue * 3.7 * 360) % 360; // 12 часов = 12 оборотов
+    const minuteAngle = (localValue * 3.7 * 360) % 360;
 
     // Вычисление координат точки на окружности
     const getPointOnCircle = (angle, radius) => {
@@ -45,7 +43,6 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
         const deltaY = clientY - centerY;
         let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
         
-        // Нормализуем угол от 0 до 360
         angle = (angle + 360) % 360;
         return angle;
     }, []);
@@ -56,7 +53,6 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
         const rect = clockRef.current.getBoundingClientRect();
         const startAngle = getAngleFromEvent(event, rect);
         
-        // Сохраняем начальное смещение между текущим углом и углом мыши
         const currentClockAngle = totalRotationRef.current;
         const angleOffset = currentClockAngle - startAngle;
         clockRef.current._angleOffset = angleOffset;
@@ -72,30 +68,25 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
         const rect = clockRef.current.getBoundingClientRect();
         const currentAngle = getAngleFromEvent(event, rect);
 
-        // Вычисляем новый угол с учетом смещения
         let newAngle = currentAngle + clockRef.current._angleOffset;
         
-        // Плавное ограничение - не позволяем перескакивать через границы
         const lastAngle = lastAngleRef.current;
         let angleDiff = newAngle - lastAngle;
         
-        // Корректируем разницу для перехода через 360°
         if (angleDiff > 180) angleDiff -= 360;
         if (angleDiff < -180) angleDiff += 360;
         
         newAngle = lastAngle + angleDiff;
         
-        // Жесткое ограничение от 0 до 359 (не до 360!)
         if (newAngle < 0) {
             newAngle = 0;
         } else if (newAngle >= 360) {
-            newAngle = 359.999; // Останавливаемся на 359 градусах
+            newAngle = 359.999;
         }
 
         totalRotationRef.current = newAngle;
         lastAngleRef.current = newAngle;
 
-        // Преобразуем в значение 0-1
         const newValue = newAngle / 360;
         
         setLocalValue(newValue);
@@ -161,10 +152,7 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
                 flexDirection: 'column',
             }}
         >
-            {/* Контейнер с часами */}
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, mb: 1 }}>
-
-                {/* Часы */}
                 <Box sx={{ position: 'relative', width: '400px', height: '400px' }}>
                     
                     {/* SVG для сектора заполнения */}
@@ -179,7 +167,6 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
                             zIndex: 2,
                         }}
                     >
-                        {/* Заполненный сектор */}
                         {currentAngle > 0 && (
                             <path
                                 d={pathData}
@@ -204,7 +191,7 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
                         }}
                     />
 
-                    {/* Минутная стрелка (изображение) */}
+                    {/* Минутная стрелка */}
                     <Box
                         component="img"
                         src="questionsAssets/TimeCostsQuestion/minute.png"
@@ -221,7 +208,7 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
                         }}
                     />
 
-                    {/* Основная стрелка (изображение) */}
+                    {/* Основная стрелка */}
                     <Box
                         ref={clockRef}
                         component="img"
@@ -244,15 +231,11 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
                             } : {},
                         }}
                     />
-
                 </Box>
-
             </Box>
 
-            {/* Единая шкала значения */}
+            {/* Шкала значения */}
             <Box sx={{ mt: 2, px: 2 }}>
-                
-                {/* Контейнер шкалы */}
                 <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
@@ -260,7 +243,6 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
                     mt: 1,
                     position: 'relative'
                 }}>
-                    {/* Единая шкала */}
                     <Box sx={{ flexGrow: 1, position: 'relative' }}>
                         <Box sx={{
                             height: 16,
@@ -270,7 +252,6 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
                             overflow: 'hidden',
                             border: '1px solid #BDBDBD'
                         }}>
-                            {/* Заполнение шкалы слева направо */}
                             <Box sx={{
                                 position: 'absolute',
                                 left: 0,
@@ -283,7 +264,6 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
                             }} />
                         </Box>
                         
-                        {/* Метки шкалы */}
                         <Box sx={{ 
                             display: 'flex', 
                             justifyContent: 'space-between',
@@ -297,11 +277,8 @@ const TimeCostsQuestion = ({ question, currentAnswer, onAnswer }) => {
                             </Typography>
                         </Box>
                     </Box>
-
                 </Box>
-
             </Box>
-
         </Paper>
     );
 };

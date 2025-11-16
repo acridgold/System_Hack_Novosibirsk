@@ -9,32 +9,28 @@ import {
 const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) => {
     const [localValue, setLocalValue] = useState(currentAnswer !== undefined ? currentAnswer : 0);
     const [isDragging, setIsDragging] = useState(false);
-    const arrowRef = useRef(null);
     const containerRef = useRef(null);
 
-    const totalObjects = 6; // Количество объектов
-    const objectSize = 100; // Увеличенный размер объектов
-    const maxArrowLength = 350; // Увеличенная максимальная длина стрелки
-    const minArrowLength = 30; // Минимальная длина стрелки
+    const totalObjects = 6;
+    const objectSize = 100;
+    const maxArrowLength = 350;
+    const minArrowLength = 30;
 
-    // Генерация путей к изображениям
     const imagePaths = Array.from({ length: totalObjects }, (_, i) => 
         `/questionsAssets/AchievementAssessmentQuestion/${(i + 1).toString().padStart(4, '0')}.png`
     );
 
-    // Состояния для объектов на полках
     const [shelfObjects, setShelfObjects] = useState(
         Array.from({ length: totalObjects }, (_, index) => ({
             id: index,
             visible: false,
             opacity: 0,
-            shelf: index < 3 ? 'top' : 'bottom', // Первые 3 на верхней полке, остальные на нижней
-            position: index % 3, // Позиция на полке (0, 1, 2)
+            shelf: index < 3 ? 'top' : 'bottom',
+            position: index % 3,
             path: imagePaths[index]
         }))
     );
 
-    // Обновление видимости объектов в зависимости от значения
     useEffect(() => {
         const visibleCount = Math.floor(localValue * totalObjects);
         const newOpacity = localValue > 0 ? 1 : 0;
@@ -48,13 +44,11 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
         );
     }, [localValue]);
 
-    // Обработчик начала перетаскивания стрелки
     const handleArrowMouseDown = useCallback((event) => {
         setIsDragging(true);
         event.preventDefault();
     }, []);
 
-    // Обработчик движения
     const handleMouseMove = useCallback((event) => {
         if (!isDragging || !containerRef.current) return;
 
@@ -63,28 +57,23 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
         
         if (!clientX) return;
 
-        // Вычисляем прогресс на основе положения мыши относительно контейнера
         const containerLeft = rect.left;
         const mouseX = clientX;
         
-        // Максимальное расстояние перетаскивания (от левой границы контейнера)
-        const maxDragDistance = rect.width - 100; // Учитываем отступы
+        const maxDragDistance = rect.width - 100;
         const dragDistance = Math.max(0, Math.min(maxDragDistance, mouseX - containerLeft));
         
-        // Преобразуем в значение 0-1
         const progress = dragDistance / maxDragDistance;
-        
         const newValue = Math.max(0, Math.min(1, progress));
+        
         setLocalValue(newValue);
         onAnswer(newValue);
     }, [isDragging, onAnswer]);
 
-    // Обработчик окончания перетаскивания
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
     }, []);
 
-    // Глобальные обработчики событий
     useEffect(() => {
         if (isDragging) {
             document.addEventListener('mousemove', handleMouseMove);
@@ -101,19 +90,8 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
         };
     }, [isDragging, handleMouseMove, handleMouseUp]);
 
-    // Расчет длины и формы стрелки
     const arrowLength = minArrowLength + (maxArrowLength - minArrowLength) * localValue;
-    const arrowCurve = 60 * localValue; // Кривизна стрелки
-
-    // Получение текста состояния
-    const getStateText = (value) => {
-        if (value === 0) return 'Объекты скрыты';
-        if (value < 0.2) return 'Почти нет достижений';
-        if (value < 0.4) return 'Несколько достижений';
-        if (value < 0.6) return 'Умеренные достижения';
-        if (value < 0.8) return 'Хорошие достижения';
-        return 'Отличные достижения';
-    };
+    const arrowCurve = 60 * localValue;
 
     return (
         <Paper
@@ -131,7 +109,6 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                 height: '100%',
             }}
         >
-            {/* Основной контейнер */}
             <Box 
                 ref={containerRef}
                 sx={{ 
@@ -144,12 +121,7 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                     position: 'relative',
                 }}
             >
-
-                {/* Информация о состоянии */}
                 <Box sx={{ mb: 3, textAlign: 'center', width: '100%' }}>
-                    
-                    
-                    {/* Шкала прогресса */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mt: 2 }}>
                         <LinearProgress 
                             variant="determinate" 
@@ -181,7 +153,6 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                     </Box>
                 </Box>
 
-                {/* Полки с объектами */}
                 <Box sx={{ 
                     width: '100%', 
                     height: '350px',
@@ -191,8 +162,6 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                     justifyContent: 'space-between',
                     mb: 3
                 }}>
-                    
-                    {/* Верхняя полка */}
                     <Box sx={{ 
                         position: 'relative',
                         height: '160px',
@@ -200,7 +169,6 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                         justifyContent: 'center',
                         alignItems: 'flex-end',
                     }}>
-                        {/* Полка */}
                         <Box sx={{
                             position: 'absolute',
                             bottom: 0,
@@ -212,7 +180,6 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                             boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
                         }} />
                         
-                        {/* Объекты на верхней полке */}
                         {shelfObjects.filter(obj => obj.shelf === 'top').map((obj) => (
                             <Box
                                 key={obj.id}
@@ -245,16 +212,14 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                         ))}
                     </Box>
 
-                    {/* Нижняя полка (под вторым рядом) */}
                     <Box sx={{ 
                         position: 'relative',
                         height: '160px',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'flex-start',
-                        mt: 2 // Отступ между полками
+                        mt: 2
                     }}>
-                        {/* Полка */}
                         <Box sx={{
                             position: 'absolute',
                             top: 0,
@@ -266,7 +231,6 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                             boxShadow: '0 -4px 8px rgba(0,0,0,0.3)',
                         }} />
                         
-                        {/* Объекты на нижней полке */}
                         {shelfObjects.filter(obj => obj.shelf === 'bottom').map((obj) => (
                             <Box
                                 key={obj.id}
@@ -300,7 +264,6 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                     </Box>
                 </Box>
 
-                {/* Стрелка (слева направо, до конца) */}
                 <Box sx={{ 
                     position: 'relative',
                     width: '100%',
@@ -309,7 +272,6 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                     justifyContent: 'flex-start',
                     alignItems: 'center',
                 }}>
-                    {/* Полукруглая стрелка слева направо */}
                     <svg 
                         width="100%" 
                         height="100" 
@@ -320,7 +282,6 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                         onMouseDown={handleArrowMouseDown}
                         onTouchStart={handleArrowMouseDown}
                     >
-                        {/* Фон стрелки (полупрозрачный) */}
                         <path
                             d={`M 30,50 
                                 Q ${30 + arrowCurve},50 ${30 + arrowLength},50`}
@@ -330,9 +291,7 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                             strokeLinecap="round"
                         />
                         
-                        {/* Основная стрелка */}
                         <path
-                            ref={arrowRef}
                             d={`M 30,50 
                                 Q ${30 + arrowCurve},50 ${30 + arrowLength},50`}
                             stroke="#4CAF50"
@@ -341,14 +300,12 @@ const AchievementAssessmentQuestion = ({ question, currentAnswer, onAnswer }) =>
                             strokeLinecap="round"
                         />
                         
-                        {/* Наконечник стрелки */}
                         <polygon
                             points={`${50 + arrowLength},50 ${10 + arrowLength},35 ${10 + arrowLength},65`}
                             fill="#4CAF50"
                         />
                     </svg>
                 </Box>
-
             </Box>
         </Paper>
     );

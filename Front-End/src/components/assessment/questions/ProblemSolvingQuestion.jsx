@@ -9,7 +9,6 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
     const [localValue, setLocalValue] = useState(currentAnswer !== undefined ? currentAnswer : 1);
     const [images, setImages] = useState([]);
     const [draggingImage, setDraggingImage] = useState(null);
-    const [isScattered, setIsScattered] = useState(false);
     const containerRef = useRef(null);
     const [containerSize, setContainerSize] = useState({ width: 500, height: 400 });
 
@@ -75,17 +74,12 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
                 id: index,
                 x: centerX,
                 y: centerY,
-                startX: centerX,
-                startY: centerY,
                 targetX: trajectory.targetX,
                 targetY: trajectory.targetY,
-                directionX: Math.cos(trajectory.angle),
-                directionY: Math.sin(trajectory.angle),
                 maxRotation: trajectory.rotation,
                 maxScale: trajectory.scale,
                 rotation: 0,
                 scale: 1,
-                isDragged: false,
                 path: imagePaths[index]
             };
         });
@@ -99,24 +93,19 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
         const centerY = containerSize.height / 2;
 
         let totalDistance = 0;
-        let movedImages = 0;
 
         images.forEach(image => {
             const distance = Math.sqrt(
                 Math.pow(image.x - centerX, 2) + Math.pow(image.y - centerY, 2)
             );
             totalDistance += distance;
-            if (distance > 5) movedImages++;
         });
 
         const averageDistance = totalDistance / images.length;
-        
         const newValue = Math.max(0, Math.min(1, 1 - (averageDistance / scatterDistance)));
         
         setLocalValue(newValue);
         onAnswer(newValue);
-        
-        setIsScattered(movedImages > totalImages / 2);
     }, [images, onAnswer, containerSize, scatterDistance]);
 
     const handleImageMouseDown = useCallback((imageId, event) => {
@@ -176,8 +165,7 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
                     x: boundedX, 
                     y: boundedY,
                     rotation,
-                    scale,
-                    isDragged: image.id === draggingImage
+                    scale
                 };
             })
         );
@@ -209,7 +197,7 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
             sx={{
                 p: 4,
                 border: '2px solid #E0EFE5',
-                background: ' #FFFFFF',
+                background: '#FFFFFF',
                 position: 'relative',
                 overflow: 'hidden',
                 minHeight: '600px',
@@ -227,8 +215,6 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
                 width: '100%',
                 height: '100%',
             }}>
-
-                {/* Основной контент с шкалой и областью объектов */}
                 <Box sx={{ 
                     display: 'flex', 
                     width: '100%', 
@@ -238,20 +224,18 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
                     alignItems: 'stretch'
                 }}>
                     
-                    {/* Вертикальная шкала слева - УВЕЛИЧЕННАЯ И ЯРКАЯ */}
+                    {/* Вертикальная шкала */}
                     <Box sx={{ 
                         display: 'flex', 
                         flexDirection: 'column', 
                         alignItems: 'center',
-                        width: 100, // Увеличил ширину
+                        width: 100,
                         height: '100%',
                         minHeight: '500px',
                         borderRadius: 2,
-                        
                     }}>
-                        {/* Верхняя надпись */}
                         <Typography 
-                            variant="body1" // Увеличил размер шрифта
+                            variant="body1"
                             color="text.primary" 
                             sx={{ 
                                 fontWeight: 'bold',
@@ -263,18 +247,16 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
                             Я быстро сдаюсь
                         </Typography>
                         
-                        {/* Контейнер для шкалы - УВЕЛИЧЕННЫЙ */}
                         <Box sx={{ 
                             position: 'relative',
-                            width: 25, // Увеличил ширину
+                            width: 25,
                             height: '500px',
                             backgroundColor: '#e9ecef',
-                            borderRadius: 20, // Увеличил скругление
+                            borderRadius: 20,
                             overflow: 'hidden',
                             flex: 1,
-                            border: '2px solid #adb5bd' // Добавил границу
+                            border: '2px solid #adb5bd'
                         }}>
-                            {/* Заполненная часть шкалы */}
                             <Box
                                 sx={{
                                     position: 'absolute',
@@ -289,9 +271,8 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
                             />
                         </Box>
                         
-                        {/* Нижняя надпись */}
                         <Typography 
-                            variant="body1" // Увеличил размер шрифта
+                            variant="body1"
                             color="text.primary" 
                             sx={{ 
                                 fontWeight: 'bold',
@@ -364,7 +345,6 @@ const ProblemSolvingQuestion = ({ question, currentAnswer, onAnswer }) => {
                         ))}
                     </Box>
                 </Box>
-
             </Box>
         </Paper>
     );

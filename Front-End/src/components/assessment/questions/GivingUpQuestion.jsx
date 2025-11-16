@@ -6,44 +6,31 @@ import {
 } from '@mui/material';
 import { Star } from '@mui/icons-material';
 
-const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
+const GivingUpQuestion = ({ currentAnswer, onAnswer }) => {
     const [localValue, setLocalValue] = useState(currentAnswer !== undefined ? currentAnswer : 0.5);
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef(null);
     const dragStartPos = useRef({ x: 0, y: 0 });
     const dragStartValue = useRef(0);
 
-    // Константы позиций
-    const START_X = 170;   // Лестница слева
-    const START_Y = 450;   // Основание лестницы
-    const END_X = 500;     // Звезда справа
-    const END_Y = 80;      // Звезда в правом верхнем углу
+    const START_X = 170;
+    const START_Y = 450;
+    const END_X = 500;
+    const END_Y = 80;
     const MIN_LENGTH = 100;
     const MAX_LENGTH = 450;
 
-    // Вычисление позиций элементов
     const getLadderDimensions = (value) => {
-        // Вычисляем вектор от начала к звезде
         const vectorX = END_X - START_X;
         const vectorY = END_Y - START_Y;
         
-        // Длина полного вектора до звезды
         const totalLength = Math.sqrt(vectorX * vectorX + vectorY * vectorY);
-        
-        // Текущая длина лестницы (от минимальной до максимальной)
         const currentLength = MIN_LENGTH + (MAX_LENGTH - MIN_LENGTH) * value;
-        
-        // Ограничиваем длину максимальным расстоянием до звезды
         const effectiveLength = Math.min(currentLength, totalLength);
-        
-        // Пропорция текущей длины к полной длине
         const ratio = effectiveLength / totalLength;
         
-        // Позиция конца лестницы (движется по направлению к звезде)
         const topX = START_X + vectorX * ratio;
         const topY = START_Y + vectorY * ratio;
-        
-        // Угол наклона лестницы
         const angle = Math.atan2(vectorY, -vectorX) * (180 / Math.PI);
         
         return {
@@ -63,10 +50,8 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
 
     const dimensions = getLadderDimensions(localValue);
 
-    // Обработчик начала перетаскивания объекта
     const handleMouseDown = useCallback((event) => {
         setIsDragging(true);
-        const rect = containerRef.current.getBoundingClientRect();
         const clientX = event.clientX || (event.touches && event.touches[0].clientX);
         const clientY = event.clientY || (event.touches && event.touches[0].clientY);
         
@@ -78,47 +63,36 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
         event.preventDefault();
     }, [localValue]);
 
-    // Обновление значения при движении - теперь учитываем движение вдоль линии лестницы
     const handleMouseMove = useCallback((event) => {
         if (!isDragging || !containerRef.current) return;
 
-        const rect = containerRef.current.getBoundingClientRect();
         const clientX = event.clientX || (event.touches && event.touches[0].clientX);
         const clientY = event.clientY || (event.touches && event.touches[0].clientY);
         
         if (!clientX || !clientY) return;
 
-        // Вычисляем вектор движения мыши
         const deltaX = clientX - dragStartPos.current.x;
         const deltaY = clientY - dragStartPos.current.y;
 
-        // Нормализуем вектор направления лестницы
         const ladderDirX = dimensions.vectorX / dimensions.totalLength;
         const ladderDirY = dimensions.vectorY / dimensions.totalLength;
 
-        // Проецируем движение мыши на направление лестницы (скалярное произведение)
         const movementAlongLadder = deltaX * ladderDirX + deltaY * ladderDirY;
-
-        // Преобразуем движение вдоль лестницы в изменение значения
-        // Чувствительность регулирует, насколько быстро меняется значение при движении
         const sensitivity = 0.005;
         const newValue = Math.max(0, Math.min(1, dragStartValue.current + movementAlongLadder * sensitivity));
         
         setLocalValue(newValue);
         onAnswer(newValue);
 
-        // Обновляем стартовую позицию для плавного перетаскивания
         dragStartPos.current = { x: clientX, y: clientY };
         dragStartValue.current = newValue;
 
     }, [isDragging, onAnswer, dimensions.vectorX, dimensions.vectorY, dimensions.totalLength]);
 
-    // Обработчик окончания перетаскивания
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
     }, []);
 
-    // Глобальные обработчики событий
     useEffect(() => {
         const handleGlobalMouseMove = (event) => {
             handleMouseMove(event);
@@ -143,15 +117,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
         };
     }, [isDragging, handleMouseMove, handleMouseUp]);
 
-    // Получение цвета в зависимости от значения
-    const getValueColor = (value) => {
-        const hue = 120 * value;
-        return `hsl(${hue}, 70%, 50%)`;
-    };
-
-    const valueColor = getValueColor(localValue);
-
-    // Количество ступенек зависит от длины лестницы
     const getStepCount = (length) => {
         return Math.max(3, Math.floor(length / 20));
     };
@@ -172,8 +137,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                 flexDirection: 'column',
             }}
         >
-
-            {/* Основной контейнер */}
             <Box 
                 ref={containerRef}
                 sx={{ 
@@ -187,7 +150,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                     display: 'flex',
                 }}
             >
-                {/* Вертикальная шкала слева */}
                 <Box
                     sx={{
                         width: '80px',
@@ -200,7 +162,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                         zIndex: 15,
                     }}
                 >
-                    
                     <Box sx={{ 
                         flex: 1, 
                         display: 'flex', 
@@ -210,8 +171,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                         width: '100%', 
                         my: 2,
                     }}>
-                        
-                        {/* Кастомная вертикальная шкала */}
                         <Box sx={{ 
                             flex: 1, 
                             width: '24px', 
@@ -222,7 +181,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                             border: '1px solid #BDBDBD',
                             borderRadius: '12px',
                         }}>
-                            {/* Заполнение шкалы - снизу вверх */}
                             <Box
                                 sx={{
                                     position: 'absolute',
@@ -236,15 +194,10 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 }}
                             />
                         </Box>
-                        
                     </Box>
-
-                    
                 </Box>
 
-                {/* Основная область с лестницей и звездой */}
                 <Box sx={{ flex: 1, position: 'relative' }}>
-                    {/* Текст около звезды - ЦЕЛЬ */}
                     <Box
                         sx={{
                             position: 'absolute',
@@ -265,7 +218,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                         </Typography>
                     </Box>
 
-                    {/* Звезда в правом верхнем углу */}
                     <Box
                         sx={{
                             position: 'absolute',
@@ -285,7 +237,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                         />
                     </Box>
 
-                    {/* Текст около начала лестницы - СТАРТ */}
                     <Box
                         sx={{
                             position: 'absolute',
@@ -299,15 +250,12 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                         <Typography 
                             fontWeight="bold" 
                             color="#000000ff"
-                            sx={{
-                                whiteSpace: 'nowrap',
-                             }}
+                            sx={{ whiteSpace: 'nowrap' }}
                         >
                             У меня нет уверенности в своих силах
                         </Typography>
                     </Box>
 
-                    {/* Лестница */}
                     <Box
                         sx={{
                             position: 'absolute',
@@ -320,7 +268,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                             zIndex: 5,
                         }}
                     >
-                        {/* Боковые стойки лестницы */}
                         <Box
                             sx={{
                                 position: 'absolute',
@@ -342,7 +289,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                             }}
                         />
 
-                        {/* Ступеньки лестницы */}
                         {Array.from({ length: stepCount }, (_, i) => {
                             const stepPosition = (i / (stepCount - 1)) * dimensions.height;
                             return (
@@ -363,7 +309,6 @@ const GivingUpQuestion = ({ question, currentAnswer, onAnswer }) => {
                         })}
                     </Box>
 
-                    {/* ОБЪЕКТ НА ЛЕСТНИЦЕ - изображение без теней и границ */}
                     <Box
                         sx={{
                             position: 'absolute',
