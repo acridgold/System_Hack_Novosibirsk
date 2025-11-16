@@ -67,7 +67,7 @@ export const ASSESSMENT_QUESTIONS = [
         //EE
         id: 8,
         text: 'Оцените свои профессиональные достижения',
-        subtitle: '',
+        subtitle: 'Потяните за стрелочку, чтобы показать достижения',
         category: 'emotional_attitude',
         component: 'AchievementAssessmentQuestion'
     },
