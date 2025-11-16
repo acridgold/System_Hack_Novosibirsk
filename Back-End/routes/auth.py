@@ -2,10 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from .db.db_models import User
 from .db.database import db
-
 from .data.logger import auth_logger
-
-# Доп. импорт для определения ошибок БД
 import psycopg2
 import sqlalchemy
 
@@ -13,23 +10,10 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    """
-    Регистрация нового пользователя
-    POST /auth/register
-
-    Формат: application/json
-    {
-        "email": "user@example.com",
-        "password": "password123",
-        "name": "Иван Петров",
-        "position": "Старший курьер",
-        "department": "Отдел доставки"
-    }
-    """
+    """Регистрация нового пользователя"""
     try:
         data = request.get_json()
 
-        # Проверка обязательных полей
         required_fields = ['email', 'password', 'name', 'position', 'department']
         for field in required_fields:
             if not data.get(field):
@@ -42,21 +26,18 @@ def register():
         position = data.get('position')
         department = data.get('department')
 
-        # Проверка, что пользователь еще не зарегистрирован
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             auth_logger.warning(f"Попытка регистрации с существующим email: {email}")
             return jsonify({'detail': 'Email already registered'}), 409
 
-        # Проверка длины пароля
         if len(password) < 6:
             auth_logger.warning(f"Попытка регистрации с коротким паролем для {email}")
             return jsonify({'detail': 'Password must be at least 6 characters'}), 400
 
-        # Создаем нового пользователя
         new_user = User(
             email=email,
-            password=password,  # В реальном приложении нужно хешировать пароль!
+            password=password,
             name=name,
             position=position,
             department=department,
@@ -64,13 +45,11 @@ def register():
             completed_recommendations=0
         )
 
-        # Сохраняем пользователя в БД
         db.session.add(new_user)
         db.session.commit()
 
         auth_logger.info(f"Новый пользователь зарегистрирован: {email} (ID: {new_user.id})")
 
-        # Создаем JWT токен
         access_token = create_access_token(identity=str(new_user.id))
 
         return jsonify({
@@ -80,7 +59,6 @@ def register():
         }), 201
 
     except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
-        # Ошибка подключения к БД — возвращаем 503
         try:
             db.session.rollback()
         except Exception:
@@ -98,16 +76,8 @@ def register():
 
 @auth_bp.route('/token', methods=['POST'])
 def login():
-    """
-    Авторизация пользователя
-    POST /auth/token
-
-    Формат: application/x-www-form-urlencoded или application/json
-    - username: email пользователя
-    - password: пароль
-    """
+    """Авторизация пользователя"""
     try:
-        # Поддерживаем оба формата: form-data и JSON
         if request.is_json:
             data = request.get_json()
             username = data.get('username') or data.get('email')
@@ -122,14 +92,12 @@ def login():
             auth_logger.warning(f"Ошибка входа: отсутствуют учетные данные для {username}")
             return jsonify({'detail': 'Email and password are required'}), 400
 
-        # Ищем пользователя в БД
         user = User.query.filter_by(email=username.lower().strip()).first()
 
         if not user or user.password != password:
             auth_logger.warning(f"Неверные учетные данные для пользователя: {username}")
             return jsonify({'detail': 'Invalid email or password'}), 401
 
-        # Создаем JWT токен
         access_token = create_access_token(identity=str(user.id))
 
         auth_logger.info(f"Пользователь {username} (ID: {user.id}) успешно авторизован")
@@ -151,17 +119,12 @@ def login():
 @auth_bp.route('/verify', methods=['GET'])
 @jwt_required()
 def verify_token():
-    """
-    Проверка валидности токена
-    GET /auth/verify
-    Header: Authorization: Bearer {token}
-    """
+    """Проверка валидности токена"""
     try:
         auth_logger.info("Запрос проверки валидности токена")
         user_id = get_jwt_identity()
         user_id_int = int(user_id)
 
-        # Ищем пользователя по ID
         user = User.query.get(user_id_int)
 
         if not user:
@@ -185,32 +148,27 @@ def verify_token():
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def get_current_user():
-    """
-    Получить данные текущего пользователя
-    GET /auth/me
-    Header: Authorization: Bearer {token}
-    """
+    """Получить данные текущего пользователя"""
     try:
-        auth_logger.info(f"Запрос текущего пользователя")
+        auth_logger.info("Запрос текущего пользователя")
         user_id = get_jwt_identity()
         user_id_int = int(user_id)
 
         auth_logger.info(f"Запрос данных пользователя ID: {user_id_int}")
 
-        # Ищем пользователя по ID
         user = User.query.get(user_id_int)
 
         if not user:
-            auth_logger.warning(f"Пользователь не найден по ID: {user_id}")
+            auth_logger.warning(f"Пользователь не найден по ID: {user_id_int}")
             return jsonify({'detail': 'User not found'}), 404
 
-        auth_logger.info(f"Данные пользователя получены: {user.email}")
+        auth_logger.info(f"Пользователь ID: {user_id_int} найден")
         return jsonify(user.to_dict()), 200
 
     except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
-        auth_logger.error(f"Ошибка подключения к БД при получении текущего пользователя: {e}", exc_info=True)
+        auth_logger.error(f"Ошибка подключения к БД при получении пользователя: {e}", exc_info=True)
         return jsonify({'detail': 'Service unavailable (database)'}), 503
 
     except Exception as e:
-        auth_logger.error(f"Ошибка при получении данных пользователя: {str(e)}", exc_info=True)
+        auth_logger.error(f"Ошибка при получении пользователя: {str(e)}", exc_info=True)
         return jsonify({'detail': str(e)}), 500

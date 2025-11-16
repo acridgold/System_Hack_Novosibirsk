@@ -6,7 +6,6 @@ import os
 import json
 from ..data.logger import ai_logger
 
-# Список всех доступных рекомендаций из mockRecommendations.js
 RECOMMENDATIONS_DB = [
     {
         'id': 1,
@@ -264,26 +263,18 @@ RECOMMENDATIONS_DB = [
 
 
 def get_ai_recommendations(burnout_level: str, emotional_exhaustion: float,
-                          depersonalization: float, reduced_accomplishment: float) -> list:
-    """
-    Получить рекомендации от AI на основе метрик выгорания.
-
-    Args:
-        burnout_level: 'low', 'medium', 'high'
-        emotional_exhaustion: оценка эмоционального истощения
-        depersonalization: оценка деперсонализации
-        reduced_accomplishment: оценка снижения достижений
-
-    Returns:
-        Список словарей с выбранными рекомендациями
-    """
+                          depersonalization: float, reduced_accomplishment: float,
+                          employee_burnout_score: float = None) -> list:
+    """Получить рекомендации от AI на основе метрик выгорания"""
     try:
-        # Подготовка промпта для AI
+        final_burnout_score = employee_burnout_score if employee_burnout_score else emotional_exhaustion
+
         prompt = f"""На основе следующих метрик выгорания сотрудника:
 - Уровень выгорания: {burnout_level}
-- Эмоциональное истощение: {emotional_exhaustion:.1f}/27
-- Деперсонализация: {depersonalization:.1f}/15
-- Снижение личных достижений: {reduced_accomplishment:.1f}/18
+- Профессиональная активность: {emotional_exhaustion:.2f}/1.0
+- Психическая стабильность: {depersonalization:.2f}/1.0
+- Эмоциональное отношение: {reduced_accomplishment:.2f}/1.0
+- Итоговый балл выгорания: {final_burnout_score:.2f}/1.0
 
 Выбери 5-7 наиболее подходящих рекомендаций из следующего списка:
 
@@ -297,16 +288,14 @@ def get_ai_recommendations(burnout_level: str, emotional_exhaustion: float,
 
 Не добавляй описания, номера ID или категории. Только названия рекомендаций."""
 
-        ai_logger.info(f"Отправляю запрос на выбор рекомендаций для уровня {burnout_level}")
+        ai_logger.info(f"Отправляю запрос на выбор рекомендаций для уровня {burnout_level}. Итоговый балл: {final_burnout_score}")
 
-        # Отправляем запрос к AI через /chat endpoint
         reply = _call_ai_chat(prompt)
 
         if not reply:
             ai_logger.warning("AI вернула пустой ответ, используем рекомендации по умолчанию")
             return _get_default_recommendations(burnout_level)
 
-        # Парсим ответ от AI
         recommendations = _parse_ai_response(reply)
 
         if not recommendations:
@@ -332,9 +321,7 @@ def _format_recommendations_for_prompt() -> str:
 def _call_ai_chat(message: str) -> str:
     """Вызывает AI chat endpoint и возвращает ответ"""
     try:
-        # Определяем базовый URL (может быть настроен через ENV)
         ai_endpoint = os.environ.get('AI_CHAT_ENDPOINT', 'http://localhost:5000/ai/chat')
-
         payload = {'message': message}
 
         ai_logger.info(f"Calling AI endpoint: {ai_endpoint}")
@@ -360,29 +347,20 @@ def _call_ai_chat(message: str) -> str:
 
 
 def _parse_ai_response(response: str) -> list:
-    """
-    Парсит ответ от AI и возвращает список рекомендаций.
-    Ожидает формат:
-    1. Название рекомендации
-    2. Название рекомендации
-    ...
-    """
+    """Парсит ответ от AI в формате списка рекомендаций"""
     try:
         recommendations = []
         lines = response.strip().split('\n')
 
         for line in lines:
-            # Очищаем строку от номеров и точек
             line = line.strip()
             if not line:
                 continue
 
-            # Удаляем номер (1., 2., и т.д.)
             if line[0].isdigit() and '.' in line[:3]:
                 line = line.split('.', 1)[1].strip()
 
             if line:
-                # Ищем рекомендацию в БД по названию
                 matched_rec = None
                 for rec in RECOMMENDATIONS_DB:
                     if rec['title'].lower() in line.lower() or line.lower() in rec['title'].lower():
@@ -440,42 +418,38 @@ def _get_duration(category: str) -> str:
 
 
 def _get_default_recommendations(burnout_level: str) -> list:
-    """
-    Возвращает рекомендации по умолчанию на основе уровня выгорания
-    """
+    """Возвращает рекомендации по умолчанию на основе уровня выгорания"""
     defaults = {
         'high': [
-            RECOMMENDATIONS_DB[0],   # Практикуйте осознанность
-            RECOMMENDATIONS_DB[1],   # Используйте технику Pomodoro
-            RECOMMENDATIONS_DB[3],   # Соблюдайте режим сна
-            RECOMMENDATIONS_DB[7],   # Проводите время на свежем воздухе
-            RECOMMENDATIONS_DB[12],  # Практикуйте диафрагмальное дыхание
-            RECOMMENDATIONS_DB[34],  # Практикуйте йогу
-            RECOMMENDATIONS_DB[37],  # Дышите по методу 4-7-8
+            RECOMMENDATIONS_DB[0],
+            RECOMMENDATIONS_DB[1],
+            RECOMMENDATIONS_DB[3],
+            RECOMMENDATIONS_DB[7],
+            RECOMMENDATIONS_DB[12],
+            RECOMMENDATIONS_DB[34],
+            RECOMMENDATIONS_DB[37],
         ],
         'medium': [
-            RECOMMENDATIONS_DB[0],   # Практикуйте осознанность
-            RECOMMENDATIONS_DB[2],   # Регулярные упражнения
-            RECOMMENDATIONS_DB[4],   # Сбалансированное питание
-            RECOMMENDATIONS_DB[8],   # Читайте художественную литературу
-            RECOMMENDATIONS_DB[15],  # Слушайте любимую музыку
-            RECOMMENDATIONS_DB[19],  # Занимайтесь творчеством
+            RECOMMENDATIONS_DB[0],
+            RECOMMENDATIONS_DB[2],
+            RECOMMENDATIONS_DB[4],
+            RECOMMENDATIONS_DB[8],
+            RECOMMENDATIONS_DB[15],
+            RECOMMENDATIONS_DB[19],
         ],
         'low': [
-            RECOMMENDATIONS_DB[5],   # Общайтесь с близкими
-            RECOMMENDATIONS_DB[6],   # Ведите дневник благодарности
-            RECOMMENDATIONS_DB[10],  # Учитесь новому еженедельно
-            RECOMMENDATIONS_DB[11],  # Помогайте другим
-            RECOMMENDATIONS_DB[17],  # Играйте в настольные игры
+            RECOMMENDATIONS_DB[5],
+            RECOMMENDATIONS_DB[6],
+            RECOMMENDATIONS_DB[10],
+            RECOMMENDATIONS_DB[11],
+            RECOMMENDATIONS_DB[17],
         ],
     }
 
     result = defaults.get(burnout_level, defaults['medium'])
 
-    # Добавляем приоритет и длительность
     for rec in result:
         rec['priority'] = _get_priority(rec['title'])
         rec['duration'] = _get_duration(rec['category'])
 
     return result
-

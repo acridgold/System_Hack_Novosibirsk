@@ -163,24 +163,40 @@ class OldUser(db.Model):
         return f'<OldUser {self.email}>'
 
 class EmployeeData(db.Model):
-    """Отдельный класс для данных из Excel (отдельная таблица/база)"""
+    """Модель данных сотрудника из Excel"""
     __tablename__ = 'employee_data'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), unique=True, nullable=False, index=True)  # Связь с User (one-to-one)
-    full_name = Column(String(255))  # Имя + Фамилия + Отчество (если нужно)
-    gender = Column(String(50))  # Пол
-    age = Column(Integer)  # Возраст
-    position = Column(String(255))  # Должность
-    department = Column(String(255))  # Отдел
-    tenure = Column(String(255))  # Стаж (строка вроде '5 лет 4 месяца')
-    training = Column(String(100))  # Обучение ('завершена', 'в процессе' и т.д.)
-    last_vacation = Column(DateTime)  # Отпуск (когда ходил в последний раз), конвертировано из Excel date
-    subordinates = Column(String(255))  # В подчинении сотрудники (для нормализации position)
+    user_id = Column(Integer, ForeignKey('users.id'), unique=True, nullable=True, index=True)
+
+    full_name = Column(String(255), nullable=False)
+    legal_entity = Column(String(100))
+    gender = Column(String(50))
+    city = Column(String(100))
+    position = Column(String(255))
+    department = Column(String(255))
+    tenure = Column(String(255))
+    age = Column(Integer)
+    subordinates = Column(String(255))
+
+    kpi_june = Column(Float)
+    kpi_july = Column(Float)
+    kpi_august = Column(Float)
+    kpi_september = Column(Float)
+    kpi_october = Column(Float)
+
+    attestation = Column(String(100))
+    training = Column(String(100))
+    last_vacation = Column(DateTime)
+    sick_leave = Column(String(50))
+    reprimand = Column(String(50))
+    corporate_activities = Column(String(50))
+
+    burnout_self_assessment = Column(String(255))
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Связь
     user = relationship('User', back_populates='employee_data')
 
     def to_dict(self):
@@ -189,15 +205,27 @@ class EmployeeData(db.Model):
             'id': self.id,
             'userId': self.user_id,
             'fullName': self.full_name,
+            'legalEntity': self.legal_entity,
             'gender': self.gender,
-            'age': self.age,
+            'city': self.city,
             'position': self.position,
             'department': self.department,
             'tenure': self.tenure,
+            'age': self.age,
+            'subordinates': self.subordinates,
+            'kpiJune': self.kpi_june,
+            'kpiJuly': self.kpi_july,
+            'kpiAugust': self.kpi_august,
+            'kpiSeptember': self.kpi_september,
+            'kpiOctober': self.kpi_october,
+            'attestation': self.attestation,
             'training': self.training,
             'lastVacation': self.last_vacation.strftime('%Y-%m-%d') if self.last_vacation else None,
-            'subordinates': self.subordinates,
+            'sickLeave': self.sick_leave,
+            'reprimand': self.reprimand,
+            'corporateActivities': self.corporate_activities,
+            'burnoutSelfAssessment': self.burnout_self_assessment,
         }
 
     def __repr__(self):
-        return f'<EmployeeData {self.id} - User {self.user_id}>'
+        return f'<EmployeeData {self.id} - {self.full_name}>'
