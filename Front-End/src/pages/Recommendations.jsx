@@ -8,7 +8,6 @@ import {
     Box,
     Card,
     CardContent,
-    Chip,
     Button,
     Avatar,
     Alert,
@@ -28,7 +27,7 @@ import {
     Groups,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { fetchRecommendations, localMarkComplete } from '../store/slices/recommendationsSlice';
+import { fetchRecommendations, localMarkComplete, localClearCompleted } from '../store/slices/recommendationsSlice';
 import { MOCK_RECOMMENDATIONS } from '../utils/mockRecommendations.js';
 
 const Recommendations = () => {
@@ -39,16 +38,70 @@ const Recommendations = () => {
     const { answers } = useSelector((state) => state.assessment);
     const [completed, setCompleted] = React.useState({});
 
-    // Проверяем есть ли локальные результаты
-    const hasLocalResults = Object.keys(answers).length > 0;
+    // Есть ли локальные результаты (для гостя)
+    const hasLocalResults = answers && Object.keys(answers).length > 0;
+
+    // Ключ в localStorage: для авторизованного пользователя отдельный, иначе общий для гостя
+    const getStorageKey = () => (user && user.id) ? `recommendations_completed_${user.id}` : 'recommendations_completed_guest';
+
+    // Загружаем состояние при монтировании / при смене пользователя
+    useEffect(() => {
+        try {
+            const key = getStorageKey();
+            const raw = localStorage.getItem(key);
+            if (raw) {
+                setCompleted(JSON.parse(raw));
+            } else {
+                setCompleted({});
+            }
+        } catch (e) {
+            // ignore
+            setCompleted({});
+        }
+    }, [user]);
+
+    // Синхронизируем между вкладками — слушаем событие storage
+    useEffect(() => {
+        const handler = (e) => {
+            if (!e.key) return;
+            const key = getStorageKey();
+            if (e.key === key) {
+                try {
+                    setCompleted(e.newValue ? JSON.parse(e.newValue) : {});
+                } catch (err) {
+                    // ignore
+                }
+            }
+        };
+        window.addEventListener('storage', handler);
+        return () => window.removeEventListener('storage', handler);
+    }, [user]);
 
     useEffect(() => {
         dispatch(fetchRecommendations());
     }, [dispatch, isAuthenticated]);
 
     const handleToggleComplete = (id) => {
-        setCompleted((prev) => ({ ...prev, [id]: !prev[id] }));
+        setCompleted((prev) => {
+            const updated = { ...prev, [id]: !prev[id] };
+            try {
+                localStorage.setItem(getStorageKey(), JSON.stringify(updated));
+            } catch (e) {
+                // ignore
+            }
+            return updated;
+        });
         dispatch(localMarkComplete(id));
+    };
+
+    const handleClearAll = () => {
+        try {
+            localStorage.removeItem(getStorageKey());
+        } catch (e) {
+            // ignore
+        }
+        setCompleted({});
+        dispatch(localClearCompleted());
     };
 
     // Иконки для категорий
@@ -81,17 +134,29 @@ const Recommendations = () => {
     // Используем enriched рекомендации или tips из API
     const recommendationsList = tips.length > 0 ? tips : enrichedRecommendations;
 
-    const priorityColors = {
-        high: 'error',
-        medium: 'warning',
-        low: 'info',
-    };
+    // Вычисляем количество выполненных по текущему списку рекомендаций
+    const completedCount = recommendationsList.filter((t) => completed[t.id]).length;
 
-    const priorityLabels = {
-        high: 'Высокий приоритет',
-        medium: 'Средний приоритет',
-        low: 'Низкий приоритет',
-    };
+    // Если рекомендации пришли с флагом completed (например, с бэка), мёрджим их в локальное состояние и localStorage
+    useEffect(() => {
+        if (!recommendationsList || recommendationsList.length === 0) return;
+        let changed = false;
+        const merged = { ...completed };
+        recommendationsList.forEach((t) => {
+            if (t.completed && !merged[t.id]) {
+                merged[t.id] = true;
+                changed = true;
+            }
+        });
+        if (changed) {
+            try {
+                localStorage.setItem(getStorageKey(), JSON.stringify(merged));
+            } catch (e) {
+                // ignore
+            }
+            setCompleted(merged);
+        }
+    }, [recommendationsList]);
 
     // ===== ЕСЛИ НЕ АВТОРИЗОВАН И НЕТ ЛОКАЛЬНЫХ РЕЗУЛЬТАТОВ =====
     if (!isAuthenticated && !hasLocalResults) {
@@ -196,7 +261,7 @@ const Recommendations = () => {
                     <Grid container spacing={3} textAlign="center">
                         <Grid item xs={12} md={4}>
                             <Typography variant="h3" color="primary" fontWeight="bold">
-                                {Object.keys(completed).filter((k) => completed[k]).length}
+                                {completedCount}
                             </Typography>
                             <Typography variant="body1" color="text.secondary">
                                 Начали выполнять
@@ -212,7 +277,7 @@ const Recommendations = () => {
                         </Grid>
                         <Grid item xs={12} md={4}>
                             <Typography variant="h3" color="success.main" fontWeight="bold">
-                                {Math.round((Object.keys(completed).filter((k) => completed[k]).length / 3) * 100) || 0}%
+                                {Math.round((completedCount / 3) * 100) || 0}%
                             </Typography>
                             <Typography variant="body1" color="text.secondary">
                                 Прогресс сегодня
@@ -333,16 +398,25 @@ const Recommendations = () => {
                 elevation={0}
                 sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #9c27b0 0%, #e91e63 100%)', color: 'white' }}
             >
-                <Box display="flex" alignItems="center" mb={2}>
-                    <Lightbulb sx={{ fontSize: 48, mr: 2 }} />
-                    <div>
-                        <Typography variant="h3" fontWeight="bold">
-                            Персональные рекомендации
-                        </Typography>
-                        <Typography variant="body1">
-                            Советы для {user?.name}, адаптированные под ваши результаты
-                        </Typography>
-                    </div>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                    <Box display="flex" alignItems="center">
+                        <Lightbulb sx={{ fontSize: 48, mr: 2 }} />
+                        <div>
+                            <Typography variant="h3" fontWeight="bold">
+                                Персональные рекомендации
+                            </Typography>
+                            <Typography variant="body1">
+                                Советы для {user?.name}, адаптированные под ваши результаты
+                            </Typography>
+                        </div>
+                    </Box>
+
+                    {/*<Box>*/}
+                    {/*    <Button variant="outlined" color="inherit" onClick={handleClearAll} sx={{ borderColor: 'rgba(255,255,255,0.3)' }}>*/}
+                    {/*        Сбросить все выполненные*/}
+                    {/*    </Button>*/}
+                    {/*</Box>*/}
+
                 </Box>
             </Paper>
 
@@ -351,7 +425,7 @@ const Recommendations = () => {
                 <Grid container spacing={3} textAlign="center">
                     <Grid item xs={12} md={3}>
                         <Typography variant="h3" color="primary" fontWeight="bold">
-                            {Object.keys(completed).filter((k) => completed[k]).length}
+                            {completedCount}
                         </Typography>
                         <Typography variant="body1" color="text.secondary">
                             Выполнено
@@ -367,7 +441,7 @@ const Recommendations = () => {
                     </Grid>
                     <Grid item xs={12} md={3}>
                         <Typography variant="h3" color="success.main" fontWeight="bold">
-                            {Math.round((Object.keys(completed).filter((k) => completed[k]).length / recommendationsList.length) * 100) || 0}%
+                            {Math.round((completedCount / recommendationsList.length) * 100) || 0}%
                         </Typography>
                         <Typography variant="body1" color="text.secondary">
                             Прогресс

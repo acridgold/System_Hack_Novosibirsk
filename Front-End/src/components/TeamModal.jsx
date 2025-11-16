@@ -261,6 +261,34 @@ const TeamModal = ({ open, onClose }) => {
                     </Grid>
                 </Grid>
 
+
+                {/* AI Recommendations */}
+                <Card elevation={0} sx={{ mt: 3, border: '1px solid #E0EFE5', backgroundColor: '#F0F9F5' }}>
+                    <CardContent>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                            <Typography variant="h6" fontWeight="bold" color="primary">
+                                Рекомендации для менеджмента
+                            </Typography>
+                            {loading && <CircularProgress size={20} sx={{ color: '#00AA44' }} />}
+                        </Box>
+
+                        {loading ? (
+                            <Typography variant="body2" color="text.secondary">
+                                Генерация рекомендаций...
+                            </Typography>
+                        ) : (
+                            <Box component="ul" sx={{ pl: 2, m: 0 }}>
+                                {recommendations.map((rec, index) => (
+                                    <Typography key={index} component="li" variant="body2" sx={{ mb: 1 }}>
+                                        {rec}
+                                    </Typography>
+                                ))}
+                            </Box>
+                        )}
+                    </CardContent>
+                </Card>
+
+
                 {/* Anonymous Team Members List */}
                 <Typography variant="h6" fontWeight="bold" mb={2} color="text.primary">
                     Анонимные показатели сотрудников
@@ -394,32 +422,6 @@ const TeamModal = ({ open, onClose }) => {
                         </Card>
                     ))}
                 </Box>
-
-                {/* AI Recommendations */}
-                <Card elevation={0} sx={{ mt: 3, border: '1px solid #E0EFE5', backgroundColor: '#F0F9F5' }}>
-                    <CardContent>
-                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                            <Typography variant="h6" fontWeight="bold" color="primary">
-                                Рекомендации для менеджмента
-                            </Typography>
-                            {loading && <CircularProgress size={20} sx={{ color: '#00AA44' }} />}
-                        </Box>
-
-                        {loading ? (
-                            <Typography variant="body2" color="text.secondary">
-                                Генерация рекомендаций...
-                            </Typography>
-                        ) : (
-                            <Box component="ul" sx={{ pl: 2, m: 0 }}>
-                                {recommendations.map((rec, index) => (
-                                    <Typography key={index} component="li" variant="body2" sx={{ mb: 1 }}>
-                                        {rec}
-                                    </Typography>
-                                ))}
-                            </Box>
-                        )}
-                    </CardContent>
-                </Card>
             </DialogContent>
         </Dialog>
     );

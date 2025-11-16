@@ -70,6 +70,12 @@ const recommendationsSlice = createSlice({
             state.synced = false;
         },
 
+        // Локальный сброс всех отметок выполнено
+        localClearCompleted: (state) => {
+            state.tips = state.tips.map(tip => ({ ...tip, completed: false }));
+            state.synced = false;
+        },
+
         clearError: (state) => {
             state.error = null;
         },
@@ -103,5 +109,5 @@ const recommendationsSlice = createSlice({
     },
 });
 
-export const { localMarkComplete, clearError } = recommendationsSlice.actions;
+export const { localMarkComplete, localClearCompleted, clearError } = recommendationsSlice.actions;
 export default recommendationsSlice.reducer;

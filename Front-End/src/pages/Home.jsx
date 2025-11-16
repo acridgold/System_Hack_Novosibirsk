@@ -41,7 +41,7 @@ export default function Home() {
         {
             icon: <TrendingDown sx={{ fontSize: 40 }} />,
             title: 'Отслеживание прогресса',
-            description: 'Видьте динамику изменения показателей в реальном времени',
+            description: 'Следите за динамикой изменения показателей в реальном времени',
             color: '#00DD55',
             bgGradient: 'linear-gradient(135deg, rgba(0, 221, 85, 0.1) 0%, rgba(51, 255, 136, 0.05) 100%)',
         },
