@@ -8,7 +8,6 @@ from .data.logger import auth_logger
 # Доп. импорт для определения ошибок БД
 import psycopg2
 import sqlalchemy
-from sqlalchemy import exc as sa_exc
 
 auth_bp = Blueprint('auth', __name__)
 

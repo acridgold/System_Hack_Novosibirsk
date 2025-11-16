@@ -13,7 +13,7 @@ print("=" * 60)
 
 # Тестовые учетные данные
 test_credentials = {
-    'username': 'user@example.co',
+    'username': 'user@example.com',
     'password': 'password123'
 }
 
