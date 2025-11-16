@@ -1,14 +1,10 @@
 from datetime import datetime
-from typing import Optional, Dict, Any, List
-
+from typing import Optional
 from .db.db_models import EmployeeData
 
-# Текущая дата по умолчанию (можно передать свою)
 DEFAULT_CURRENT_DATE = datetime.utcnow()
 
-# Нормализация метрик (оставляем прежние коэффициенты)
 def normalize_type(burnout_type: Optional[str]) -> float:
-    # НЕ мапим ничего дополнительно: ожидаем, что burnout_type уже в виде 'G','S','A','B' или None.
     mapping = {'G': 0, 'S': 0.3, 'A': 0.7, 'B': 1}
     if burnout_type is None:
         return 0
@@ -32,7 +28,6 @@ def normalize_training(training: Optional[str]) -> float:
     mapping = {'завершена': 0, 'в процессе': 0.3, 'нет': 0.6, 'не прошел': 0.6, 'не прошла': 0.6}
     return mapping.get(training.lower(), 0.6)
 
-# Парсинг стажа из строки вроде '5 лет 4 месяца' (если tenure хранится в таком же формате)
 def parse_tenure(tenure_str: Optional[str]) -> int:
     if not isinstance(tenure_str, str):
         return 0
@@ -48,7 +43,6 @@ def parse_tenure(tenure_str: Optional[str]) -> int:
                     months += int(part)
     return months
 
-# Основная формула: принимает burnout_type как строку из БД (не пытаемся мапить по score)
 def calculate_burnout_score_from_employee(
     emp: EmployeeData,
     burnout_type: Optional[str],
@@ -56,8 +50,7 @@ def calculate_burnout_score_from_employee(
 ) -> float:
     type_score = normalize_type(burnout_type)
 
-    # last_vacation уже хранится как datetime в БД (или None)
-    last_vac_dt = emp.last_vacation  # type: Optional[datetime]
+    last_vac_dt = emp.last_vacation
     vacation_days = None
     if isinstance(last_vac_dt, datetime):
         vacation_days = (current_date - last_vac_dt).days
@@ -66,7 +59,6 @@ def calculate_burnout_score_from_employee(
     tenure_months = parse_tenure(emp.tenure)
     tenure_norm = normalize_tenure(tenure_months)
 
-    # position/subordinates: используем поля EmployeeData.position и subordinates
     position_str = emp.position or emp.subordinates or ''
     position_norm = normalize_position(position_str)
 

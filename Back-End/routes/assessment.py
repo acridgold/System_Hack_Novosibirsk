@@ -1,85 +1,147 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from .db.db_models import Assessment, User, Recommendation
+from .db.db_models import Assessment, User, Recommendation, EmployeeData
 from .db.database import db
-
-# Импортируем логгер
 from .data.logger import assessment_logger
-
-# Импортируем функцию для выбора рекомендаций
 from .utils.recommendations_selector import get_ai_recommendations
-
-# Доп. импорт для определения ошибок БД
+from .burnoutScore import calculate_burnout_score_from_employee
 import psycopg2
 from sqlalchemy import exc as sa_exc
+from datetime import datetime
 
 assessment_bp = Blueprint('assessment', __name__)
 
-def calculate_burnout_scores(answers):
-    """
-    Рассчитывает показатели выгорания на основе ответов
-    Использует шкалу Maslach Burnout Inventory (MBI)
-    """
-    # Эмоциональное истощение (9 вопросов)
-    ee_questions = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-    emotional_exhaustion = sum(int(answers.get(str(i), 0)) for i in ee_questions)
+def calculate_burnout_scores(answers, user_id):
+    """Рассчитывает показатели выгорания на основе ответов и данных сотрудника"""
+    professional_activity = [0, 1, 2, 3, 4]
+    professional_score = sum(float(answers.get(str(i), 0)) for i in professional_activity) / len(professional_activity)
 
-    # Деперсонализация (5 вопросов)
-    dp_questions = [9, 10, 11, 12, 13]
-    depersonalization = sum(int(answers.get(str(i), 0)) for i in dp_questions)
+    mental_stability = [5, 6, 7]
+    mental_score = sum(float(answers.get(str(i), 0)) for i in mental_stability) / len(mental_stability)
 
-    # Снижение личных достижений (6 вопросов)
-    pa_questions = [14, 15, 16, 17, 18, 19]
-    reduced_accomplishment = sum(int(answers.get(str(i), 0)) for i in pa_questions)
+    emotional_attitude = [8, 9, 10]
+    emotional_score = sum(float(answers.get(str(i), 0)) for i in emotional_attitude) / len(emotional_attitude)
 
-    # Общий балл
-    total_score = emotional_exhaustion + depersonalization + reduced_accomplishment
+    total_score = (professional_score + mental_score + emotional_score) / 3
 
-    # Определяем уровень выгорания
-    if total_score >= 70:
+    if total_score >= 0.7:
         burnout_level = 'high'
-    elif total_score >= 50:
+    elif total_score >= 0.4:
         burnout_level = 'medium'
     else:
         burnout_level = 'low'
 
+    employee_burnout_score = None
+    try:
+        employee_data = EmployeeData.query.filter_by(user_id=user_id).first()
+        if employee_data:
+            burnout_type_mapping = {
+                'low': 'G',
+                'medium': 'S',
+                'high': 'A'
+            }
+            burnout_type = burnout_type_mapping.get(burnout_level, 'G')
+            employee_burnout_score = calculate_burnout_score_from_employee(
+                employee_data,
+                burnout_type,
+                datetime.utcnow()
+            )
+            assessment_logger.info(f"Рассчитан score для сотрудника: {employee_burnout_score}")
+    except Exception as e:
+        assessment_logger.warning(f"Не удалось рассчитать score из EmployeeData: {e}")
+        employee_burnout_score = None
+
     return {
-        'emotionalExhaustion': emotional_exhaustion,
-        'depersonalization': depersonalization,
-        'reducedAccomplishment': reduced_accomplishment,
-        'score': total_score,
+        'professionalActivityScore': round(professional_score, 2),
+        'mentalStabilityScore': round(mental_score, 2),
+        'emotionalAttitudeScore': round(emotional_score, 2),
+        'score': round(total_score, 2),
+        'employeeBurnoutScore': round(employee_burnout_score, 2) if employee_burnout_score else None,
         'burnoutLevel': burnout_level,
     }
 
 ASSESSMENT_QUESTIONS = [
-    "Я чувствую себя эмоционально истощенным из-за работы",
-    "Я чувствую усталость в конце рабочего дня",
-    "Я отношусь к своей работе с безразличием",
-    "Я чувствую, что мои усилия напрасны",
-    "Я работаю не по силам",
-    "Я чувствую отчаяние из-за работы",
-    "Я думаю, что моя работа разрушает мою личность",
-    "Я чувствую, что моя работа теряет значение",
-    "Я не заботлюсь о том, что происходит с моими коллегами",
-    "Я воспринимаю других людей как объекты",
-    "Я работаю с людьми лишь потому, что это мой долг",
-    "Я чувствую себя использованным людьми",
-    "Я чувствую, что люди не ценят мою помощь",
-    "Я чувствую апатию к своей работе",
-    "Я не чувствую готовности браться за новые проекты",
-    "Я чувствую, что мои успехи не признаются",
-    "Я чувствую себя не компетентным в своей работе",
-    "Я думаю о том, что я неудачник",
-    "Я чувствую, что мои достижения незначительны",
-    "Я чувствую, что я не способен справляться с проблемами",
+    {
+        'id': 0,
+        'text': 'Оцените Ваше стремление к профессиональным достижениям',
+        'category': 'professional_activity',
+        'component': 'ProfessionalGoalsQuestion'
+    },
+    {
+        'id': 1,
+        'text': 'Оцените Ваш баланс между работой и жизнью',
+        'subtitle': 'Перемещайте чаши весов вверх и вниз',
+        'category': 'professional_activity',
+        'component': 'WorkLifeBalanceQuestion'
+    },
+    {
+        'id': 2,
+        'text': 'Стремитесь ли Вы к совершенству?',
+        'subtitle': 'Отмечайте галочками выполненные «задания»',
+        'category': 'professional_activity',
+        'component': 'PerfectWorkQuestion'
+    },
+    {
+        'id': 3,
+        'text': 'Умеете ли Вы отдыхать после работы?',
+        'subtitle': 'Перемещайте сотрудника между работой и отдыхом',
+        'category': 'professional_activity',
+        'component': 'RelaxAbilityQuestion'
+    },
+    {
+        'id': 4,
+        'text': 'Сколько времени и сил Вы посвещаете работе?',
+        'subtitle': 'Поворачивайте часовую стрелку',
+        'category': 'professional_activity',
+        'component': 'TimeCostsQuestion'
+    },
+    {
+        'id': 5,
+        'text': 'Оцените свое умения справляться с неудачами',
+        'subtitle': 'Перетаскивайте кусочки, чтобы собрать разбитый объект',
+        'category': 'mental_stability',
+        'component': 'ProblemSolvingQuestion'
+    },
+    {
+        'id': 6,
+        'text': 'Как вы реагируете на проблемы на работе?',
+        'subtitle': 'Удлиняйте лестницу, перемещая сотрудника',
+        'category': 'mental_stability',
+        'component': 'GivingUpQuestion'
+    },
+    {
+        'id': 7,
+        'text': 'Умеете ли вы сохранять спокойствие в стрессовых ситуациях?',
+        'subtitle': 'Перемещайте «облако стресса»',
+        'category': 'mental_stability',
+        'component': 'StressResistanceQuestion'
+    },
+    {
+        'id': 8,
+        'text': 'Оцените свои профессиональные достижения',
+        'subtitle': 'Потяните за стрелочку, чтобы показать достижения',
+        'category': 'emotional_attitude',
+        'component': 'AchievementAssessmentQuestion'
+    },
+    {
+        'id': 9,
+        'text': 'Насколько вы в целом довольны своей жизнью?',
+        'subtitle': 'Двигайте улыбку на лице',
+        'category': 'emotional_attitude',
+        'component': 'LifeSatisfactionQuestion'
+    },
+    {
+        'id': 10,
+        'text': 'Ощущаете ли вы поддержку от близких людей?',
+        'subtitle': 'Двигайте людей друг к другу',
+        'category': 'emotional_attitude',
+        'component': 'RelativesSupportQuestion'
+    },
 ]
 
 @assessment_bp.route('/questions', methods=['GET'])
 def get_questions():
-    """
-    Получить список вопросов для диагностики
-    GET /assessment/questions
-    """
+    """Получить список вопросов для диагностики"""
     try:
         return jsonify({
             'questions': ASSESSMENT_QUESTIONS,
@@ -92,20 +154,7 @@ def get_questions():
 @assessment_bp.route('/submit', methods=['POST'])
 @jwt_required()
 def submit_assessment():
-    """
-    Отправить ответы на диагностику
-    POST /assessment/submit
-    Header: Authorization: Bearer {token}
-
-    Body (JSON):
-    {
-        "answers": {
-            "0": 3,
-            "1": 4,
-            ...
-        }
-    }
-    """
+    """Отправить ответы на диагностику"""
     try:
         user_id_str = get_jwt_identity()
         user_id = int(user_id_str)
@@ -119,49 +168,54 @@ def submit_assessment():
 
         answers = data.get('answers')
 
-        # Проверяем, что получены ответы на все вопросы
         if len(answers) != len(ASSESSMENT_QUESTIONS):
             assessment_logger.warning(f"Неполные ответы от пользователя ID: {user_id}. Получено: {len(answers)}, ожидается: {len(ASSESSMENT_QUESTIONS)}")
             return jsonify({'detail': f'Expected {len(ASSESSMENT_QUESTIONS)} answers'}), 400
 
-        # Проверяем, что пользователь существует
+        for answer_id, answer_value in answers.items():
+            try:
+                val = float(answer_value)
+                if not (0 <= val <= 1):
+                    assessment_logger.warning(f"Ответ вне диапазона 0-1 для вопроса {answer_id}: {val}")
+                    return jsonify({'detail': f'Answer for question {answer_id} must be between 0 and 1'}), 400
+            except (ValueError, TypeError):
+                assessment_logger.warning(f"Некорректный ответ для вопроса {answer_id}: {answer_value}")
+                return jsonify({'detail': f'Answer for question {answer_id} must be a number between 0 and 1'}), 400
+
         user = User.query.get(user_id)
         if not user:
             assessment_logger.warning(f"Пользователь ID: {user_id} не найден")
             return jsonify({'detail': 'User not found'}), 404
 
-        # Рассчитываем показатели выгорания
-        scores = calculate_burnout_scores(answers)
+        scores = calculate_burnout_scores(answers, user_id)
 
         assessment_logger.info(f"Диагностика обработана для пользователя ID: {user_id}. Уровень выгорания: {scores['burnoutLevel']}, Балл: {scores['score']}")
 
-        # Создаем новую диагностику в БД
         new_assessment = Assessment(
             user_id=user_id,
             burnout_level=scores['burnoutLevel'],
             score=scores['score'],
-            emotional_exhaustion=scores['emotionalExhaustion'],
-            depersonalization=scores['depersonalization'],
-            reduced_accomplishment=scores['reducedAccomplishment'],
+            emotional_exhaustion=scores['professionalActivityScore'],
+            depersonalization=scores['mentalStabilityScore'],
+            reduced_accomplishment=scores['emotionalAttitudeScore'],
             answers=answers
         )
 
         db.session.add(new_assessment)
-        db.session.flush()  # Сохраняем до коммита, чтобы получить ID диагностики
+        db.session.flush()
 
         assessment_logger.info(f"Диагностика сохранена. ID диагностики: {new_assessment.id}")
 
-        # Получаем рекомендации от AI на основе метрик выгорания
         assessment_logger.info(f"Запрашиваю рекомендации для пользователя ID: {user_id}")
 
         recommended_items = get_ai_recommendations(
             burnout_level=scores['burnoutLevel'],
-            emotional_exhaustion=scores['emotionalExhaustion'],
-            depersonalization=scores['depersonalization'],
-            reduced_accomplishment=scores['reducedAccomplishment']
+            emotional_exhaustion=scores['professionalActivityScore'],
+            depersonalization=scores['mentalStabilityScore'],
+            reduced_accomplishment=scores['emotionalAttitudeScore'],
+            employee_burnout_score=scores['employeeBurnoutScore']
         )
 
-        # Сохраняем рекомендации в БД
         for rec_data in recommended_items:
             new_recommendation = Recommendation(
                 user_id=user_id,
@@ -179,6 +233,10 @@ def submit_assessment():
 
         return jsonify({
             **new_assessment.to_dict(),
+            'professionalActivityScore': scores['professionalActivityScore'],
+            'mentalStabilityScore': scores['mentalStabilityScore'],
+            'emotionalAttitudeScore': scores['emotionalAttitudeScore'],
+            'employeeBurnoutScore': scores['employeeBurnoutScore'],
             'recommendations': [r.to_dict() for r in recommended_items],
             'recommendationsCount': len(recommended_items)
         }), 201
@@ -195,18 +253,13 @@ def submit_assessment():
 @assessment_bp.route('/history', methods=['GET'])
 @jwt_required()
 def get_assessment_history():
-    """
-    Получить историю диагностик пользователя
-    GET /assessment/history
-    Header: Authorization: Bearer {token}
-    """
+    """Получить историю диагностик пользователя"""
     try:
         user_id_str = get_jwt_identity()
         user_id = int(user_id_str)
 
         assessment_logger.info(f"Запрос истории диагностик для пользователя ID: {user_id}")
 
-        # Получаем все диагностики пользователя, отсортированные по дате (новые в начале)
         assessments = Assessment.query.filter_by(user_id=user_id).order_by(
             Assessment.date.desc()
         ).all()
@@ -225,18 +278,13 @@ def get_assessment_history():
 @assessment_bp.route('/<int:assessment_id>', methods=['GET'])
 @jwt_required()
 def get_assessment(assessment_id):
-    """
-    Получить детали конкретной диагностики
-    GET /assessment/{assessment_id}
-    Header: Authorization: Bearer {token}
-    """
+    """Получить детали конкретной диагностики"""
     try:
         user_id_str = get_jwt_identity()
         user_id = int(user_id_str)
 
         assessment_logger.info(f"Запрос деталей диагностики ID: {assessment_id} для пользователя ID: {user_id}")
 
-        # Получаем диагностику, проверяя что она принадлежит пользователю
         assessment = Assessment.query.filter_by(
             id=assessment_id,
             user_id=user_id
