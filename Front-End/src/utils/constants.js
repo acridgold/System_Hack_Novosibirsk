@@ -75,7 +75,7 @@ export const ASSESSMENT_QUESTIONS = [
         //LZ
         id: 9,
         text: 'Насколько вы в целом довольны своей жизнью?',
-        subtitle: '',
+        subtitle: 'Двигайте улыбку на лице',
         category: 'emotional_attitude',
         component: 'LifeSatisfactionQuestion'
     },
@@ -83,8 +83,9 @@ export const ASSESSMENT_QUESTIONS = [
         //SU
         id: 10,
         text: 'Ощущаете ли вы поддержку от близких людей?',
-        subtitle: '',
+        subtitle: 'Двигайте людей друг к другу',
         category: 'emotional_attitude',
+        component: 'RelativesSupportQuestion'
     },
 ];
 

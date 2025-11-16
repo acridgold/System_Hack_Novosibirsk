@@ -25,6 +25,7 @@ const ProblemSolvingQuestion = lazy(() => import('../components/assessment/quest
 const StressResistanceQuestion = lazy(() => import('../components/assessment/questions/StressResistanceQuestion'));
 const AchievementAssessmentQuestion = lazy(() => import('../components/assessment/questions/AchievementAssessmentQuestion'));
 const LifeSatisfactionQuestion = lazy(() => import('../components/assessment/questions/LifeSatisfactionQuestion'));
+const RelativesSupportQuestion = lazy(() => import('../components/assessment/questions/RelativesSupportQuestion'));
 
 const COMPONENT_MAP = {
     ProfessionalGoalsQuestion,
@@ -36,7 +37,8 @@ const COMPONENT_MAP = {
     ProblemSolvingQuestion,
     StressResistanceQuestion,
     AchievementAssessmentQuestion,
-    LifeSatisfactionQuestion
+    LifeSatisfactionQuestion,
+    RelativesSupportQuestion
 };
 
 const Assessment = () => {
@@ -189,7 +191,6 @@ const Assessment = () => {
                             variant="contained"
                             endIcon={<CheckCircle />}
                             onClick={handleSubmit}
-                            disabled={!currentAnswer || loading}
                             size="large"
                             sx={{
                                 background: 'linear-gradient(135deg, #00AA44 0%, #00FF66 50%, #00DD55 100%)',
