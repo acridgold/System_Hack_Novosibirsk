@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # PostgreSQL база данных
+  db:
+    image: postgres:15-alpine
+    container_name: system_hack_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-system_hack_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./Back-end/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - system_hack_network
+    restart: unless-stopped
+
+  # Flask бэкенд приложение
+  backend:
+    build:
+      context: ./Back-end
+      dockerfile: Dockerfile
+    container_name: system_hack_backend
+    environment:
+      # Flask
+      FLASK_APP: app.py
+      FLASK_ENV: ${FLASK_ENV:-production}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+
+      # JWT
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
+      JWT_ACCESS_TOKEN_EXPIRES: ${JWT_ACCESS_TOKEN_EXPIRES:-86400}
+
+      # Database
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-system_hack_db}
+
+      # API
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      YANDEX_FOLDER_ID: ${YANDEX_FOLDER_ID:-}
+      YANDEX_GPT_API_KEY: ${YANDEX_GPT_API_KEY:-}
+    ports:
+      - "${BACKEND_PORT:-5000}:5000"
+    volumes:
+      - ./Back-end:/app
+      - ./Back-end/logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - system_hack_network
+    restart: unless-stopped
+    command: python -m flask run --host=0.0.0.0
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  system_hack_network:
+    driver: bridge
+

@@ -44,6 +44,12 @@ app.register_blueprint(ai_bp, url_prefix='/ai')
 
 app_logger.info("Все blueprints зарегистрированы")
 
+# Health check endpoint для Docker
+@app.route('/health', methods=['GET'])
+def health():
+    """Проверка здоровья приложения"""
+    return jsonify({'status': 'healthy', 'message': 'Application is running'}), 200
+
 @app.errorhandler(401)
 def unauthorized(error):
     app_logger.warning(f"Ошибка авторизации: {error}")
@@ -58,11 +64,6 @@ def not_found(error):
 def internal_error(error):
     app_logger.error(f"Внутренняя ошибка сервера: {error}", exc_info=True)
     return jsonify({'detail': 'Internal server error'}), 500
-
-@app.route('/health', methods=['GET'])
-def health():
-    app_logger.info("Проверка здоровья приложения")
-    return jsonify({'status': 'ok'}), 200
 
 if __name__ == '__main__':
     # Запускаем на 0.0.0.0:8000 чтобы совпадать с ожиданиями фронтенда (VITE_API_URL по умолчанию http://localhost:8000)
