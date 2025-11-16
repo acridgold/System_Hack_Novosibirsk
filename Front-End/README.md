@@ -9,6 +9,7 @@
 - Переменные окружения
 - Советы по отладке и типичные проблемы
 - Полезные команды
+- Структура Front-End
 
 Требования
 ----------
@@ -140,6 +141,64 @@ VITE_API_URL=http://localhost:8000
   - rmdir /s /q node_modules
   - del package-lock.json
   - npm install
+
+Структура Front-End
+-------------------
+Ниже — дерево основных папок и файлов фронтенда с кратким описанием, чтобы быстро ориентироваться, где что находится.
+
+Front-End/
+├── index.html              — основной HTML-шаблон
+├── package.json            — скрипты и зависимости проекта
+├── vite.config.js          — конфигурация Vite
+├── README.md               — этот файл (инструкции и подсказки)
+├── public/                 — статические файлы, доступные как есть
+│   ├── 404.html
+│   ├── favicon.png
+│   ├── manifest.json
+│   ├── service-worker.js
+│   └── questionsAssets/    — наборы изображений и ассетов для вопросов/контента
+│       └── <категории с изображениями>
+└── src/                    — исходный код React приложения
+    ├── main.jsx            — точка входа: рендер приложения
+    ├── App.jsx             — корневой React-компонент, маршруты
+    ├── index.jsx / index.js— вспомогательные точки входа / совместимость
+    ├── reportWebVitals.js  — (если используется) метрики/telemetry
+    ├── index.css           — базовые стили
+    ├── components/         — переиспользуемые UI-компоненты
+    │   ├── TeamModal.jsx
+    │   ├── assessment/      — компоненты для страницы Assessment
+    │   ├── common/          — общие UI-элементы (кнопки, карточки и т.п.)
+    │   ├── dashboard/       — виджеты и компоненты дашборда
+    │   ├── layout/          — Header, Sidebar, Footer и прочие Layout-компоненты
+    │   └── recommendations/ — карточки рекомендаций, чекбоксы и т.п.
+    ├── pages/              — страницы приложения (роуты)
+    │   ├── Home.jsx
+    │   ├── Login.jsx
+    │   ├── Register.jsx
+    │   ├── Assessment.jsx
+    │   ├── Recommendations.jsx — логика отображения рекомендаций и localStorage
+    │   ├── Dashboard.jsx
+    │   └── Profile.jsx
+    ├── services/           — API-обёртки и HTTP-клиенты
+    │   ├── api.js          — базовый axios/fetch wrapper
+    │   └── auth.js         — функции логина/авторизации
+    ├── store/              — Redux/RTK store и слайсы
+    │   ├── store.js
+    │   ├── index.js
+    │   └── slices/         — отдельные слайсы состояния (пользователь, recommendations и т.д.)
+    ├── styles/             — глобальные и theme-стили
+    │   ├── global.css
+    │   └── theme.js
+    └── utils/              — утилиты и мок-данные
+        ├── constants.js
+        ├── mockRecommendations.js
+        └── mockUser.js
+
+Краткие подсказки
+- Все визуальные компоненты держите в `src/components` — страницы собирают их вместе.
+- Запросы к бэкенду и обработка токенов в `src/services`.
+- Глобальное состояние и синхронизация между страницами — `src/store` и `src/store/slices`.
+- Страница рекомендаций и связанная логика находятся в `src/pages/Recommendations.jsx` и `src/components/recommendations/`.
 
 Дополнительно
 ------------

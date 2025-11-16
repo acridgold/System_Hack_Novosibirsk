@@ -13,7 +13,7 @@ import {
     Button,
     CircularProgress,
 } from '@mui/material';
-import { TrendingDown, Lock, Login as LoginIcon, Info } from '@mui/icons-material';
+import { Lock, Login as LoginIcon, Info } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import api from '../services/api';
@@ -30,6 +30,88 @@ const Dashboard = () => {
 
     const { answers } = useSelector((state) => state.assessment);
     const hasLocalResults = Object.keys(answers || {}).length > 0;
+
+    // ====== НОВОЕ: вычисление шкал и профиля пользователя ======
+    // В ASSESSMENT_QUESTIONS id сопоставлены так, как в constants.js
+    const getVal = (id) => {
+        const v = answers?.[id];
+        return v === undefined || v === null ? null : Number(v);
+    };
+
+    const BA = getVal(1); // субъективное значение деятельности
+    const BE = getVal(0); // профессиональные притязания
+    const PS = getVal(2); // стремление к совершенству
+    const DF = getVal(3); // дистанция / релаксация
+    const VB = getVal(4); // готовность к энергетическим затратам
+    const RT = getVal(5); // тенденция к отказу (чем выше — хуже)
+    const OP = getVal(6); // активная стратегия решений
+    const IR = getVal(7); // внутреннее спокойствие
+    const EE = getVal(8); // чувство успешности
+    const LZ = getVal(9); // удовлетворённость жизнью
+    const SU = getVal(10); // социальная поддержка
+
+    const avg = (arr) => {
+        const vals = arr.filter(v => v !== null && !isNaN(v));
+        if (vals.length === 0) return null;
+        return vals.reduce((a, b) => a + b, 0) / vals.length;
+    };
+
+    const activityScore = avg([BA, BE, VB, PS, DF]);
+    const stabilityScore = avg([OP, IR, RT !== null ? (5 - RT) : null]); // RT инвертируем: низкий RT -> лучше
+    const relationScore = avg([EE, LZ, SU]);
+
+    const scoreLabel = (val) => {
+        if (val === null) return 'Нет данных';
+        if (val >= 4) return 'Высокая';
+        if (val >= 3) return 'Средняя';
+        return 'Низкая';
+    };
+
+    // Классификация типа (G, S, A, B) по правилам из описания
+    const determineType = () => {
+        // Если нет данных — возвращаем неизвестно
+        if (activityScore === null && stabilityScore === null && relationScore === null) return { type: 'Нет данных', description: 'Недостаточно данных' };
+
+        const act = activityScore ?? 0;
+        const stab = stabilityScore ?? 0;
+        const rel = relationScore ?? 0;
+
+        // Тип G: все сферы высокие
+        if (act >= 4.0 && stab >= 4.0 && rel >= 4.0) {
+            return { type: 'G', title: 'Тип G — Здоровый и активный', description: 'Высокая устойчивость, сбалансированная активность и положительное отношение к работе.' };
+        }
+
+        // Тип A: экстремально высокая активность + низкая устойчивость + низкое отношение
+        if (act >= 4.5 && stab <= 2.5 && rel <= 2.5 && (RT !== null && RT >= 3.5) && (DF !== null && DF <= 2.5)) {
+            return { type: 'A', title: 'Тип A — Риск (тип A)', description: 'Очень высокая активность и притязания при низкой устойчивости и социальной поддержке. Риск развития выгорания.' };
+        }
+
+        // Тип B: очень низкая устойчивость + низкая активность + очень низкое отношение
+        if (stab <= 2.0 && act <= 3.0 && rel <= 2.0 && (RT !== null && RT >= 4.0) && (DF !== null && DF <= 2.5)) {
+            return { type: 'B', title: 'Тип B — Выгорание', description: 'Низкая мотивация и высокая уязвимость к стрессу, риск эмоционального истощения.' };
+        }
+
+        // Тип S: умеренная/низкая активность, хорошая дистанция (DF), стабильность средняя или выше, позитивное отношение
+        if (stab >= 3.0 && act <= 3.5 && (DF !== null && DF >= 4.0) && rel >= 3.5) {
+            return { type: 'S', title: 'Тип S — Экономный и стабильный', description: 'Умеренная активность и хорошая дистанция, высокая жизненная удовлетворённость и поддержка.' };
+        }
+
+        // Если не попадает ни в одну строгую категорию — вычисляем наиболее вероятный
+        // Правило: если активность высокая и устойчивость низкая => A, если активность низкая и отношение очень низкое => B, если отношение высокая и активность низкая => S, иначе G-like
+        if (act >= 4.0 && stab <= 3.0) {
+            return { type: 'A', title: 'Тип A — Риск', description: 'Высокая активность при недостаточной устойчивости.' };
+        }
+        if (act <= 3.0 && rel <= 2.5) {
+            return { type: 'B', title: 'Тип B — Выгорание', description: 'Низкая активность и низкая эмоциональная поддержка.' };
+        }
+        if (rel >= 3.5 && act <= 3.5) {
+            return { type: 'S', title: 'Тип S — Экономный', description: 'Стабильность и удовлетворённость при умеренной активности.' };
+        }
+
+        return { type: 'G', title: 'Тип G — Здоровый', description: 'Общая склонность к активному и устойчивому поведению.' };
+    };
+
+    const profile = determineType();
 
     useEffect(() => {
         if (isAuthenticated && user) {
@@ -235,6 +317,32 @@ const Dashboard = () => {
                             </Card>
                         </Grid>
                     ))}
+
+                    {/* Новая карточка профиля */}
+                    <Grid item xs={12}>
+                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Card elevation={0} sx={{ border: '1px solid #E0EFE5', width: '100%', maxWidth: 900 }}>
+                                <CardContent sx={{ textAlign: 'center' }}>
+                                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                                        Профиль
+                                    </Typography>
+                                    <Typography variant="h5" fontWeight="bold" gutterBottom>
+                                        {profile.type} — {profile.title}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" paragraph>
+                                        {profile.description}
+                                    </Typography>
+                                    <Box>
+                                        <Typography variant="caption">Профессиональная активность: {activityScore ? activityScore.toFixed(2) : '—'} ({scoreLabel(activityScore)})</Typography>
+                                        <br />
+                                        <Typography variant="caption">Устойчивость: {stabilityScore ? stabilityScore.toFixed(2) : '—'} ({scoreLabel(stabilityScore)})</Typography>
+                                        <br />
+                                        <Typography variant="caption">Отношение: {relationScore ? relationScore.toFixed(2) : '—'} ({scoreLabel(relationScore)})</Typography>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </Box>
+                    </Grid>
                 </Grid>
 
                 <Paper elevation={0} sx={{ p: 4, mb: 4, backgroundColor: '#F0F9F5', borderLeft: '5px solid #00AA44', border: '1px solid #E0EFE5' }}>
@@ -344,6 +452,32 @@ const Dashboard = () => {
                         </Card>
                     </Grid>
                 ))}
+
+                {/* Новая карточка профиля для авторизованных */}
+                <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Card elevation={0} sx={{ border: '1px solid #E0EFE5', width: '100%', maxWidth: 900 }}>
+                            <CardContent sx={{ textAlign: 'center' }}>
+                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                    Профиль
+                                </Typography>
+                                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                                    {profile.type} — {profile.title}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" paragraph>
+                                    {profile.description}
+                                </Typography>
+                                <Box>
+                                    <Typography variant="caption">Профессиональная активность: {activityScore ? activityScore.toFixed(2) : '—'} ({scoreLabel(activityScore)})</Typography>
+                                    <br />
+                                    <Typography variant="caption">Устойчивость: {stabilityScore ? stabilityScore.toFixed(2) : '—'} ({scoreLabel(stabilityScore)})</Typography>
+                                    <br />
+                                    <Typography variant="caption">Отношение: {relationScore ? relationScore.toFixed(2) : '—'} ({scoreLabel(relationScore)})</Typography>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Box>
+                </Grid>
             </Grid>
 
             <Grid container spacing={3}>
