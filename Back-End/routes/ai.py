@@ -12,7 +12,7 @@ def chat():
     """
     Endpoint для общения с LLM.
     Порядок приоритета:
-    1) OpenRouter API (если задан OPENROUTER_API_KEY)
+    1) Yandex GPT API (если задан YANDEX_GPT_IAM_TOKEN)
     2) OpenAI API (если задан OPENAI_API_KEY)
     3) Локальный endpoint, указанный в LOCAL_LLM_ENDPOINT
     4) Локальная безопасная заглушка (всегда работает)
@@ -27,64 +27,88 @@ def chat():
             ai_logger.warning('AI chat: invalid payload')
             return jsonify({'detail': 'Field "message" is required'}), 400
 
-        # 1) OpenRouter API (поддерживает множество моделей: Claude, GPT, Kimi и др.)
-        openrouter_key = os.environ.get('OPENROUTER_API_KEY')
-        if openrouter_key:
+        # 1) Yandex GPT API
+        yandex_api_key = os.environ.get('YANDEX_GPT_API_KEY')
+        yandex_iam_token = os.environ.get('YANDEX_GPT_IAM_TOKEN')
+
+        if yandex_api_key or yandex_iam_token:
             try:
-                openrouter_model = os.environ.get('OPENROUTER_MODEL', 'openai/gpt-3.5-turbo')
-                temperature = float(os.environ.get('OPENROUTER_TEMPERATURE', '0.7'))
-                max_tokens = int(os.environ.get('OPENROUTER_MAX_TOKENS', '512'))
+                yandex_model = os.environ.get('YANDEX_GPT_MODEL', 'yandexgpt/latest')
+                yandex_catalog_id = os.environ.get('YANDEX_GPT_CATALOG_ID', '')
+                temperature = float(os.environ.get('YANDEX_GPT_TEMPERATURE', '0.7'))
+                max_tokens = int(os.environ.get('YANDEX_GPT_MAX_TOKENS', '512'))
 
                 headers = {
-                    'Authorization': f'Bearer {openrouter_key}',
                     'Content-Type': 'application/json',
-                    'HTTP-Referer': 'https://github.com/System_Hack_Novosibirsk',
-                    'X-Title': 'System Hack Novosibirsk'
+                    'x-folder-id': yandex_catalog_id,
                 }
+
+                # Используем либо API Key, либо IAM токен (приоритет: API Key)
+                if yandex_api_key:
+                    headers['Authorization'] = f'Api-Key {yandex_api_key}'
+                else:
+                    headers['Authorization'] = f'Bearer {yandex_iam_token}'
 
                 payload = {
-                    'model': openrouter_model,
+                    'modelUri': f'gpt://{yandex_catalog_id}/{yandex_model}',
+                    'completionOptions': {
+                        'temperature': temperature,
+                        'maxTokens': max_tokens,
+                    },
                     'messages': [
-                        {'role': 'user', 'content': message}
-                    ],
-                    'temperature': temperature,
-                    'max_tokens': max_tokens,
+                        {
+                            'role': 'user',
+                            'text': message
+                        }
+                    ]
                 }
 
-                ai_logger.info(f'Sending request to OpenRouter API: model={openrouter_model}')
-                resp = requests.post('https://openrouter.ai/api/v1/chat/completions', json=payload, headers=headers, timeout=60)
-                ai_logger.info(f'OpenRouter response status: {resp.status_code}')
+                ai_logger.info(f'Sending request to Yandex GPT API: model={yandex_model}')
+                resp = requests.post(
+                    'https://llm.api.cloud.yandex.net/foundationModels/v1/completion',
+                    json=payload,
+                    headers=headers,
+                    timeout=60
+                )
+                ai_logger.info(f'Yandex GPT response status: {resp.status_code}')
 
                 if resp.status_code == 200:
                     try:
                         response_data = resp.json()
                         reply = None
                         if isinstance(response_data, dict):
-                            choices = response_data.get('choices')
-                            if isinstance(choices, list) and len(choices) > 0:
-                                msg = choices[0].get('message')
-                                if isinstance(msg, dict):
-                                    reply = msg.get('content')
+                            result = response_data.get('result')
+                            if isinstance(result, dict):
+                                alternatives = result.get('alternatives')
+                                if isinstance(alternatives, list) and len(alternatives) > 0:
+                                    first_alt = alternatives[0]
+                                    if isinstance(first_alt, dict):
+                                        reply = first_alt.get('message', {}).get('text')
 
                         if reply:
-                            ai_logger.info('Successfully got reply from OpenRouter')
+                            ai_logger.info('Successfully got reply from Yandex GPT')
                             return jsonify({'reply': reply.strip()}), 200
                     except Exception as e:
-                        ai_logger.warning(f'Error parsing OpenRouter response: {e}')
+                        ai_logger.warning(f'Error parsing Yandex GPT response: {e}')
                 else:
-                    ai_logger.warning(f'OpenRouter returned status {resp.status_code}')
+                    ai_logger.warning(f'Yandex GPT returned status {resp.status_code}')
+                    try:
+                        error_data = resp.json()
+                        ai_logger.warning(f'Yandex GPT error: {error_data}')
+                    except:
+                        ai_logger.warning(f'Yandex GPT response: {resp.text}')
 
                 # Fallback к локальной заглушке
-                ai_logger.info('OpenRouter error or invalid response, falling back to local mock')
+                ai_logger.info('Yandex GPT error or invalid response, falling back to local mock')
                 reply = _local_mock_response(message)
                 return jsonify({'reply': reply}), 200
 
             except requests.exceptions.Timeout:
-                ai_logger.warning('Timeout contacting OpenRouter API, using local response')
+                ai_logger.warning('Timeout contacting Yandex GPT API, using local response')
                 reply = _local_mock_response(message)
                 return jsonify({'reply': reply}), 200
             except Exception as e:
-                ai_logger.warning(f'Error contacting OpenRouter API: {e}, using local response')
+                ai_logger.warning(f'Error contacting Yandex GPT API: {e}, using local response')
                 reply = _local_mock_response(message)
                 return jsonify({'reply': reply}), 200
 

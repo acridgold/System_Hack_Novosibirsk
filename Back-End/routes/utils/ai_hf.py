@@ -1,6 +1,6 @@
 """
-Модуль для генерации рекомендаций через Hugging Face Inference API
-Копия логики из `ai.py`, но использует переменную окружения `HF_MODEL` и `HF_API_KEY`.
+Модуль для генерации рекомендаций через Yandex GPT API
+Копия логики из `ai.py`, но дублируется здесь для удобства.
 """
 import os
 import json
@@ -9,8 +9,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-HF_MODEL = os.getenv('HF_MODEL')
-HF_API_KEY = os.getenv('HF_API_KEY')
+YANDEX_GPT_API_KEY = os.getenv('YANDEX_GPT_API_KEY')
+YANDEX_GPT_IAM_TOKEN = os.getenv('YANDEX_GPT_IAM_TOKEN')
+YANDEX_GPT_MODEL = os.getenv('YANDEX_GPT_MODEL', 'yandexgpt/latest')
+YANDEX_GPT_CATALOG_ID = os.getenv('YANDEX_GPT_CATALOG_ID', '')
 
 # Импортируем резервную функцию из оригинального модуля
 try:
@@ -31,9 +33,9 @@ except Exception:
         return recs[:5]
 
 
-def generate_recommendations_hf(team_stats):
+def generate_recommendations_yandex(team_stats):
     """
-    Генерация рекомендаций через Hugging Face Inference API, модель берётся из HF_MODEL.
+    Генерация рекомендаций через Yandex GPT API.
 
     Args:
         team_stats (dict): статистика команды (ключи: critical, warning, good, total, avg_burnout)
@@ -42,8 +44,8 @@ def generate_recommendations_hf(team_stats):
         list: до 5 рекомендаций (строк)
     """
     try:
-        if not HF_MODEL or not HF_API_KEY:
-            raise RuntimeError('HF_MODEL или HF_API_KEY не настроены в окружении')
+        if not YANDEX_GPT_API_KEY and not YANDEX_GPT_IAM_TOKEN:
+            raise RuntimeError('YANDEX_GPT_API_KEY или YANDEX_GPT_IAM_TOKEN не настроены в окружении')
 
         prompt = f"""
 Ты - эксперт по управлению персоналом и профилактике профессионального выгорания.
@@ -60,46 +62,66 @@ def generate_recommendations_hf(team_stats):
 Формат ответа: каждая рекомендация с новой строки, без номеров и маркеров.
 """
 
-        headers = {"Authorization": f"Bearer {HF_API_KEY}", "Content-Type": "application/json"}
-        payload = {
-            "inputs": prompt,
-            "parameters": {"max_new_tokens": 400, "temperature": 0.7}
+        headers = {
+            'Content-Type': 'application/json',
+            'x-folder-id': YANDEX_GPT_CATALOG_ID,
         }
 
-        url = f"https://router.huggingface.co/hf-inference/models/{HF_MODEL}"
+        # Используем либо API Key, либо IAM токен (приоритет: API Key)
+        if YANDEX_GPT_API_KEY:
+            headers['Authorization'] = f'Api-Key {YANDEX_GPT_API_KEY}'
+        else:
+            headers['Authorization'] = f'Bearer {YANDEX_GPT_IAM_TOKEN}'
+
+        payload = {
+            'modelUri': f'gpt://{YANDEX_GPT_CATALOG_ID}/{YANDEX_GPT_MODEL}',
+            'completionOptions': {
+                'temperature': 0.7,
+                'maxTokens': 400,
+            },
+            'messages': [
+                {
+                    'role': 'user',
+                    'text': prompt
+                }
+            ]
+        }
+
+        url = 'https://llm.api.cloud.yandex.net/foundationModels/v1/completion'
         resp = requests.post(url, headers=headers, json=payload, timeout=30)
         resp.raise_for_status()
         data = resp.json()
 
-        # Обработка различных форматов ответа от Hugging Face
+        # Обработка ответа от Yandex GPT
         text = ""
         if isinstance(data, dict):
-            # Некоторые модели возвращают {'error':...} или {'generated_text': '...'}
-            if 'error' in data:
-                raise RuntimeError(data['error'])
-            text = data.get('generated_text') or data.get('text') or json.dumps(data)
-        elif isinstance(data, list) and len(data) > 0:
-            first = data[0]
-            if isinstance(first, dict):
-                text = first.get('generated_text') or first.get('text') or json.dumps(first)
-            else:
-                text = str(first)
-        elif isinstance(data, str):
-            text = data
-        else:
-            text = json.dumps(data)
+            result = data.get('result')
+            if isinstance(result, dict):
+                alternatives = result.get('alternatives')
+                if isinstance(alternatives, list) and len(alternatives) > 0:
+                    first_alt = alternatives[0]
+                    if isinstance(first_alt, dict):
+                        message = first_alt.get('message')
+                        if isinstance(message, dict):
+                            text = message.get('text', '')
 
-        recommendations = [r.strip() for r in text.split('\n') if r.strip()]
-        return recommendations[:5]
+        if text:
+            recommendations = [r.strip() for r in text.split('\n') if r.strip()]
+            return recommendations[:5]
+        else:
+            return get_fallback_recommendations(team_stats)
 
     except Exception as e:
-        print(f"Ошибка HF inference: {e}")
+        print(f"Ошибка Yandex GPT inference: {e}")
         return get_fallback_recommendations(team_stats)
+
+
+# Для обратной совместимости - алиас основной функции
+generate_recommendations = generate_recommendations_yandex
 
 
 # Небольшой самотест при запуске файла напрямую
 if __name__ == '__main__':
     sample = {'critical': 1, 'warning': 2, 'good': 7, 'total': 10, 'avg_burnout': 45}
-    print('HF_MODEL:', HF_MODEL)
-    print(generate_recommendations_hf(sample))
-
+    print('YANDEX_GPT_MODEL:', YANDEX_GPT_MODEL)
+    print(generate_recommendations_yandex(sample))

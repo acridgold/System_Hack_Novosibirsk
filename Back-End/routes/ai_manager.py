@@ -13,7 +13,7 @@ ai_manager_bp = Blueprint('ai_manager', __name__)
 @jwt_required()
 def get_manager_recommendations():
     """
-    Получить AI-генерированные рекомендации для менеджера
+    Получить AI-генерированные рекомендации для менеджера через Yandex GPT
 
     Body:
     {
@@ -45,7 +45,7 @@ def get_manager_recommendations():
 
         app_logger.info(f"Генерация рекомендаций для менеджера {user_id}: {team_stats}")
 
-        # Генерация рекомендаций через AI
+        # Генерация рекомендаций через Yandex GPT
         recommendations = generate_manager_recommendations(team_stats)
 
         return jsonify({
@@ -63,7 +63,7 @@ def get_manager_recommendations():
 @jwt_required()
 def get_manager_recommendations_groq():
     """
-    Альтернативный endpoint через Groq API (бесплатный)
+    Альтернативный endpoint через Yandex GPT (замена устаревшего Groq API)
     """
     try:
         user_id = get_jwt_identity()
@@ -81,10 +81,9 @@ def get_manager_recommendations_groq():
 
         return jsonify({
             'recommendations': recommendations,
-            'generated_by': 'groq',
+            'generated_by': 'yandex_gpt',
         }), 200
 
     except Exception as e:
-        app_logger.error(f"Ошибка Groq API: {str(e)}")
+        app_logger.error(f"Ошибка Yandex GPT API: {str(e)}")
         return jsonify({'error': 'Ошибка генерации рекомендаций'}), 500
-

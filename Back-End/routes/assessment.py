@@ -1,10 +1,13 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from .db.db_models import Assessment, User
+from .db.db_models import Assessment, User, Recommendation
 from .db.database import db
 
 # Импортируем логгер
 from .data.logger import assessment_logger
+
+# Импортируем функцию для выбора рекомендаций
+from .utils.recommendations_selector import get_ai_recommendations
 
 # Доп. импорт для определения ошибок БД
 import psycopg2
@@ -144,11 +147,41 @@ def submit_assessment():
         )
 
         db.session.add(new_assessment)
-        db.session.commit()
+        db.session.flush()  # Сохраняем до коммита, чтобы получить ID диагностики
 
         assessment_logger.info(f"Диагностика сохранена. ID диагностики: {new_assessment.id}")
 
-        return jsonify(new_assessment.to_dict()), 201
+        # Получаем рекомендации от AI на основе метрик выгорания
+        assessment_logger.info(f"Запрашиваю рекомендации для пользователя ID: {user_id}")
+
+        recommended_items = get_ai_recommendations(
+            burnout_level=scores['burnoutLevel'],
+            emotional_exhaustion=scores['emotionalExhaustion'],
+            depersonalization=scores['depersonalization'],
+            reduced_accomplishment=scores['reducedAccomplishment']
+        )
+
+        # Сохраняем рекомендации в БД
+        for rec_data in recommended_items:
+            new_recommendation = Recommendation(
+                user_id=user_id,
+                category=rec_data['category'],
+                title=rec_data['title'],
+                description=rec_data['description'],
+                priority=rec_data.get('priority', 'medium'),
+                duration=rec_data.get('duration', ''),
+            )
+            db.session.add(new_recommendation)
+
+        db.session.commit()
+
+        assessment_logger.info(f"Сохранено {len(recommended_items)} рекомендаций для пользователя ID: {user_id}")
+
+        return jsonify({
+            **new_assessment.to_dict(),
+            'recommendations': [r.to_dict() for r in recommended_items],
+            'recommendationsCount': len(recommended_items)
+        }), 201
 
     except (psycopg2.OperationalError, sa_exc.OperationalError) as db_error:
         db.session.rollback()

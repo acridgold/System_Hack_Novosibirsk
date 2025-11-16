@@ -76,4 +76,4 @@ def health():
 
 if __name__ == '__main__':
     app_logger.info("Запуск Flask на http://0.0.0.0:8000")
-    app.run(host='0.0.0.0', port=8000, debug=False)
+    app.run(host='localhost', port=5555, debug=False)

@@ -1,19 +1,16 @@
 """
-Модуль для работы с AI (OpenAI GPT и Groq)
+Модуль для работы с AI (Yandex GPT)
 """
 import os
-from openai import OpenAI
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Инициализация клиента OpenAI
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-
 
 def generate_manager_recommendations(team_stats):
     """
-    Генерация рекомендаций для менеджера на основе статистики команды
+    Генерация рекомендаций для менеджера на основе статистики команды через Yandex GPT
 
     Args:
         team_stats (dict): Статистика команды
@@ -23,14 +20,22 @@ def generate_manager_recommendations(team_stats):
                 'good': int,
                 'total': int,
                 'avg_burnout': float,
-                'trends': dict
             }
 
     Returns:
         list: Список рекомендаций
     """
     try:
-        # Формируем промпт для GPT
+        yandex_api_key = os.getenv('YANDEX_GPT_API_KEY')
+        yandex_iam_token = os.getenv('YANDEX_GPT_IAM_TOKEN')
+        yandex_catalog_id = os.getenv('YANDEX_GPT_CATALOG_ID', '')
+        yandex_model = os.getenv('YANDEX_GPT_MODEL', 'yandexgpt/latest')
+
+        if not yandex_api_key and not yandex_iam_token:
+            print("Ошибка: YANDEX_GPT_API_KEY или YANDEX_GPT_IAM_TOKEN не установлены")
+            return get_fallback_recommendations(team_stats)
+
+        # Формируем промпт для Yandex GPT
         prompt = f"""
 Ты - эксперт по управлению персоналом и профилактике профессионального выгорания.
 
@@ -51,23 +56,69 @@ def generate_manager_recommendations(team_stats):
 Формат ответа: каждая рекомендация с новой строки, без номеров и маркеров.
 """
 
-        messages = [
-            {"role": "system", "content": "Ты - эксперт по HR и профилактике выгорания."},
-            {"role": "user", "content": prompt}
-        ]
+        headers = {
+            'Content-Type': 'application/json',
+            'x-folder-id': yandex_catalog_id,
+        }
 
-        response = client.chat.completions.create(
-            model="gpt-3.5",  # Можно использовать gpt-3.5-turbo для экономии
-            messages=messages,  # type: ignore
-            max_tokens=500,
-            temperature=0.7,
+        # Используем либо API Key, либо IAM токен (приоритет: API Key)
+        if yandex_api_key:
+            headers['Authorization'] = f'Api-Key {yandex_api_key}'
+        else:
+            headers['Authorization'] = f'Bearer {yandex_iam_token}'
+
+        payload = {
+            'modelUri': f'gpt://{yandex_catalog_id}/{yandex_model}',
+            'completionOptions': {
+                'temperature': 0.7,
+                'maxTokens': 500,
+            },
+            'messages': [
+                {
+                    'role': 'system',
+                    'text': 'Ты - эксперт по HR и профилактике выгорания.'
+                },
+                {
+                    'role': 'user',
+                    'text': prompt
+                }
+            ]
+        }
+
+        response = requests.post(
+            'https://llm.api.cloud.yandex.net/foundationModels/v1/completion',
+            json=payload,
+            headers=headers,
+            timeout=60
         )
 
-        # Парсим ответ
-        recommendations_text = response.choices[0].message.content.strip()
-        recommendations = [r.strip() for r in recommendations_text.split('\n') if r.strip()]
+        if response.status_code == 200:
+            try:
+                response_data = response.json()
+                reply = None
+                if isinstance(response_data, dict):
+                    result = response_data.get('result')
+                    if isinstance(result, dict):
+                        alternatives = result.get('alternatives')
+                        if isinstance(alternatives, list) and len(alternatives) > 0:
+                            first_alt = alternatives[0]
+                            if isinstance(first_alt, dict):
+                                reply = first_alt.get('message', {}).get('text')
 
-        return recommendations[:5]  # Ограничиваем до 5 рекомендаций
+                if reply:
+                    recommendations = [r.strip() for r in reply.split('\n') if r.strip()]
+                    return recommendations[:5]
+            except Exception as e:
+                print(f"Ошибка парсинга ответа Yandex GPT: {e}")
+        else:
+            print(f"Yandex GPT вернул статус {response.status_code}")
+            try:
+                error_data = response.json()
+                print(f"Ошибка: {error_data}")
+            except:
+                print(f"Ответ: {response.text}")
+
+        return get_fallback_recommendations(team_stats)
 
     except Exception as e:
         # Fallback на статичные рекомендации при ошибке
@@ -96,7 +147,7 @@ def get_fallback_recommendations(team_stats):
             "Рассмотреть возможность перераспределения нагрузки в команде"
         )
         recommendations.append(
-            "Организовать ��ренинги по управлению стрессом и тайм-менеджменту"
+            "Организовать тренинги по управлению стрессом и тайм-менеджменту"
         )
 
     recommendations.append(
@@ -108,45 +159,7 @@ def get_fallback_recommendations(team_stats):
 
 def generate_recommendations_groq(team_stats):
     """
-    Генерация через Groq (бесплатный альтернатива OpenAI)
+    Альтернативная функция через Yandex GPT вместо Groq.
+    Используется тот же функционал что и generate_manager_recommendations.
     """
-    try:
-        # Импортируем Groq локально, чтобы статический анализатор не ругался, если пакет не установлен
-        try:
-            from groq import Groq  # type: ignore
-        except Exception:
-            raise RuntimeError('Пакет "groq" не установлен. Установите его через pip install groq или обновите Back-end/requirements.txt')
-
-        groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
-
-        prompt = f"""
-Статистика команды:
-- Критическое состояние: {team_stats['critical']} чел.
-- Требует внимания: {team_stats['warning']} чел.
-- В норме: {team_stats['good']} чел.
-- Средний уровень выгорания: {team_stats['avg_burnout']}%
-
-Предложи 4-5 конкретных действий для менеджера курьерской службы.
-"""
-
-        messages = [
-            {"role": "system", "content": "Ты HR-эксперт."},
-            {"role": "user", "content": prompt}
-        ]
-
-        response = groq_client.chat.completions.create(
-            model="llama3-8b-8192",  # Бесплатная модель
-            messages=messages,  # type: ignore
-            max_tokens=400,
-            temperature=0.7,
-        )
-
-        recommendations_text = response.choices[0].message.content.strip()
-        recommendations = [r.strip() for r in recommendations_text.split('\n') if r.strip()]
-
-        return recommendations[:5]
-
-    except Exception as e:
-        print(f"Ошибка Groq API: {e}")
-        return get_fallback_recommendations(team_stats)
-
+    return generate_manager_recommendations(team_stats)
