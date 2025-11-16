@@ -22,7 +22,8 @@ const RelaxAbilityQuestion = lazy(() => import('../components/assessment/questio
 const TimeCostsQuestion = lazy(() => import('../components/assessment/questions/TimeCostsQuestion'));
 const GivingUpQuestion = lazy(() => import('../components/assessment/questions/GivingUpQuestion'));
 const ProblemSolvingQuestion = lazy(() => import('../components/assessment/questions/ProblemSolvingQuestion'));
-
+const StressResistanceQuestion = lazy(() => import('../components/assessment/questions/StressResistanceQuestion'));
+const AchievementAssessmentQuestion = lazy(() => import('../components/assessment/questions/AchievementAssessmentQuestion'));
 
 const COMPONENT_MAP = {
     ProfessionalGoalsQuestion,
@@ -32,6 +33,8 @@ const COMPONENT_MAP = {
     TimeCostsQuestion,
     GivingUpQuestion,
     ProblemSolvingQuestion,
+    StressResistanceQuestion,
+    AchievementAssessmentQuestion
 };
 
 const Assessment = () => {

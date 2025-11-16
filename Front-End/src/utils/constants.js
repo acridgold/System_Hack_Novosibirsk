@@ -59,8 +59,9 @@ export const ASSESSMENT_QUESTIONS = [
         //IR
         id: 7,
         text: 'Умеете ли вы сохранять спокойствие в стрессовых ситуациях?',
-        subtitle: '',
+        subtitle: 'Перемещайте «облако стресса»',
         category: 'mental_stability',
+        component: 'StressResistanceQuestion'
     },
     {
         //EE
@@ -68,6 +69,7 @@ export const ASSESSMENT_QUESTIONS = [
         text: 'Оцените свои профессиональные достижения',
         subtitle: '',
         category: 'emotional_attitude',
+        component: 'AchievementAssessmentQuestion'
     },
     {
         //LZ
