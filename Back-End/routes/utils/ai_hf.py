@@ -66,7 +66,7 @@ def generate_recommendations_hf(team_stats):
             "parameters": {"max_new_tokens": 400, "temperature": 0.7}
         }
 
-        url = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
+        url = f"https://router.huggingface.co/hf-inference/models/{HF_MODEL}"
         resp = requests.post(url, headers=headers, json=payload, timeout=30)
         resp.raise_for_status()
         data = resp.json()
