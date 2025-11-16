@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -47,6 +47,7 @@ const Assessment = () => {
     const { answers, loading } = useSelector((state) => state.assessment);
     const { isAuthenticated } = useSelector((state) => state.user);
     const [currentQuestion, setCurrentQuestion] = useState(0);
+    const questionBoxRef = useRef(null);
 
     // ===== АВТОМАТИЧЕСКАЯ ПРОКРУТКА ВВЕРХ =====
     useEffect(() => {
@@ -56,9 +57,44 @@ const Assessment = () => {
         });
     }, [currentQuestion]);
 
+    // ===== ПРЕДОТВРАЩЕНИЕ ПРОКРУТКИ ПРИ ВЗАИМОДЕЙСТВИИ С ЭЛЕМЕНТАМИ ОПРОСА =====
+    useEffect(() => {
+        let isInteracting = false;
+
+        const handleTouchStart = (e) => {
+            // Проверяем, что touch начался внутри области вопроса
+            if (questionBoxRef.current?.contains(e.target)) {
+                isInteracting = true;
+            }
+        };
+
+        const handleTouchMove = (e) => {
+            // Блокируем прокрутку страницы только когда взаимодействуем с элементами опроса
+            if (isInteracting) {
+                e.preventDefault();
+            }
+        };
+
+        const handleTouchEnd = () => {
+            isInteracting = false;
+        };
+
+        // Добавляем обработчики с {passive: false} для возможности preventDefault
+        document.addEventListener('touchstart', handleTouchStart, { passive: false });
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+        return () => {
+            document.removeEventListener('touchstart', handleTouchStart);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, []);
+
     const handleAnswer = (value) => {
         dispatch(setAnswer({ questionId: currentQuestion, value: parseInt(value) }));
     };
+    
 
     const handleNext = () => {
         if (currentQuestion < ASSESSMENT_QUESTIONS.length - 1) {
@@ -93,7 +129,6 @@ const Assessment = () => {
             sx={{
                 py: { xs: 2, sm: 4 },
                 px: { xs: 2, sm: 3 },
-                // prevent horizontal overflow on very small screens
                 overflowX: 'hidden',
             }}
         >
@@ -151,6 +186,7 @@ const Assessment = () => {
                         </Typography>
                     )}
                 </Paper>
+                
 
                 <Suspense
                     fallback={
@@ -160,7 +196,16 @@ const Assessment = () => {
                     }
                 >
                     {QuestionComponent && (
-                        <Box sx={{ mb: 2, width: '100%', overflow: 'hidden' }}>
+                        <Box
+                            ref={questionBoxRef}
+                            sx={{
+                                mb: 2,
+                                width: '100%',
+                                overflow: 'hidden',
+                                // CSS-решение для предотвращения прокрутки
+                                touchAction: 'pan-y pinch-zoom',
+                            }}
+                        >
                             <QuestionComponent
                                 question={question}
                                 currentAnswer={currentAnswer}
@@ -195,12 +240,12 @@ const Assessment = () => {
                                 borderColor: '#00AA44',
                                 backgroundColor: 'rgba(0, 170, 68, 0.05)',
                             },
-                            // ensure min width on larger screens
                             minWidth: { sm: 160 },
                         }}
                     >
                         Назад
                     </Button>
+                    
 
                     {currentQuestion < ASSESSMENT_QUESTIONS.length - 1 ? (
                         <Button
