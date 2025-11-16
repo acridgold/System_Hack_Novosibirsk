@@ -437,9 +437,11 @@ const Recommendations = () => {
                                             size="small"
                                             endIcon={<ArrowForward />}
                                             sx={{ color: tip.color }}
-                                            href={tip.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                            onClick={() => {
+                                                if (tip.link) {
+                                                    window.open(tip.link, '_blank', 'noopener,noreferrer');
+                                                }
+                                            }}
                                         >
                                             Подробнее
                                         </Button>
