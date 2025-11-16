@@ -185,17 +185,17 @@ const ProfessionalGoalsQuestion = ({ question, currentAnswer, onAnswer }) => {
                                     width: 24,
                                     height: 24,
                                     backgroundColor: '#fff',
-                                    border: `3px solid ${currentColor}`,
+                                    border: `3px solid #4CAF50`,
                                     boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                                     '&:hover, &.Mui-focusVisible': {
-                                        boxShadow: `0 0 0 8px ${currentColor}20`,
+                                        boxShadow: `0 0 0 8px #4CAF5020`,
                                     },
                                     '&.Mui-active': {
-                                        boxShadow: `0 0 0 12px ${currentColor}30`,
+                                        boxShadow: `0 0 0 12px #4CAF5030`,
                                     },
                                 },
                                 '& .MuiSlider-track': {
-                                    background: 'linear-gradient(180deg, #4CAF50 0%, #8BC34A 25%, #FFC107 50%, #FF9800 75%, #F44336 100%)',
+                                    background: '#4CAF50',
                                     border: 'none',
                                     width: 6,
                                 },
@@ -211,7 +211,7 @@ const ProfessionalGoalsQuestion = ({ question, currentAnswer, onAnswer }) => {
                     {/* Подпись в начале слайдера */}
                     <Typography 
                         variant="caption" 
-                        color="#F44336" 
+                        color="#4CAF50" 
                         fontWeight="bold"
                         fontSize="1.1rem"
                         sx={{ 
@@ -248,10 +248,6 @@ const ProfessionalGoalsQuestion = ({ question, currentAnswer, onAnswer }) => {
                                 color: 'text.secondary',
                             }}
                         >
-                            <CircularProgress sx={{ color: '#00AA44', mb: 2 }} />
-                            <Typography variant="body2">
-                                Загрузка анимации...
-                            </Typography>
                         </Box>
                     ) : (
                         // Анимация

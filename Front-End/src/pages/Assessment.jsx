@@ -24,6 +24,7 @@ const GivingUpQuestion = lazy(() => import('../components/assessment/questions/G
 const ProblemSolvingQuestion = lazy(() => import('../components/assessment/questions/ProblemSolvingQuestion'));
 const StressResistanceQuestion = lazy(() => import('../components/assessment/questions/StressResistanceQuestion'));
 const AchievementAssessmentQuestion = lazy(() => import('../components/assessment/questions/AchievementAssessmentQuestion'));
+const LifeSatisfactionQuestion = lazy(() => import('../components/assessment/questions/LifeSatisfactionQuestion'));
 
 const COMPONENT_MAP = {
     ProfessionalGoalsQuestion,
@@ -34,7 +35,8 @@ const COMPONENT_MAP = {
     GivingUpQuestion,
     ProblemSolvingQuestion,
     StressResistanceQuestion,
-    AchievementAssessmentQuestion
+    AchievementAssessmentQuestion,
+    LifeSatisfactionQuestion
 };
 
 const Assessment = () => {

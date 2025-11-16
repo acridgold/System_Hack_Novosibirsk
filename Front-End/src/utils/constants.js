@@ -77,6 +77,7 @@ export const ASSESSMENT_QUESTIONS = [
         text: 'Насколько вы в целом довольны своей жизнью?',
         subtitle: '',
         category: 'emotional_attitude',
+        component: 'LifeSatisfactionQuestion'
     },
     {
         //SU

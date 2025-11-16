@@ -210,10 +210,10 @@ const StressResistanceQuestion = ({ question, currentAnswer, onAnswer }) => {
                     marginBottom: '40px', // Добавил отступ снизу
                 }}>
                     <Box display="flex" justifyContent="space-between" mb={1}>
-                        <Typography variant="caption" color="#4CAF50" fontWeight="bold" fontSize='1.1rem'>
+                        <Typography variant="caption" color="#000000ff" fontWeight="bold" fontSize='1.1rem'>
                             Высокая тревога
                         </Typography>
-                        <Typography variant="caption" color="#4CAF50" fontWeight="bold" fontSize='1.1rem'>
+                        <Typography variant="caption" color="#000000ff" fontWeight="bold" fontSize='1.1rem'>
                             Устойчивость
                         </Typography>
                     </Box>
